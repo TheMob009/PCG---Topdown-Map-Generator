@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public static class HeightmapGenerator
@@ -27,7 +28,17 @@ public static class HeightmapGenerator
     public static float[,] GenerateRandomNoise(int resolution, int seed)
     {
         float[,] heights = new float[resolution, resolution];
+       System.Random random = new System.Random(seed);
+        for (int y = 0; y < resolution; y++)
+        {
+            for (int x = 0; x < resolution; x++)
+            {
+  
+                double randomValue = random.NextDouble();
+                heights[y,x] = (float)randomValue;
 
+            }
+        }
         // TODO: implementar Random Noise.
 
         return heights;
@@ -198,7 +209,9 @@ public static class HeightmapGenerator
     public static float LinearInterpolation(float a, float b, float t)
     {
         // TODO: implementar la fórmula de interpolación lineal.
-        return 0f;
+        float linearInterpolation = a * (1 - t) + (b * t);
+
+        return linearInterpolation;
     }
 
     // -------------------------------------------------------------------------
@@ -226,7 +239,11 @@ public static class HeightmapGenerator
     public static float BicubicWeight(float t)
     {
         // TODO: implementar la función s(t).
-        return 0f;
+        double potencia1 = Math.Pow(t, 3f);
+        double potencia2 = Math.Pow(t, 2f);
+
+        double bicubicInterpolation = (-2 * potencia1) + (3 *potencia2);
+        return (float)bicubicInterpolation;
     }
 
     // Devuelve el peso que debe utilizar la interpolación.
