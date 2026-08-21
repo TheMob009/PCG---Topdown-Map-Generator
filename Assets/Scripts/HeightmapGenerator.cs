@@ -152,29 +152,36 @@ public static class HeightmapGenerator
                     continue;
                 }
 
-                // TODO: VALUE NOISE
-                //
-                // Para cada posición (x, y):
                 // 1. Determinar en qué celda de la grilla se encuentra.
-                // 2. Calcular tx y ty como posición relativa dentro de esa celda.
-                //    Ambos valores deben quedar entre 0 y 1.
-                // 3. Obtener los cuatro puntos de control:
-                //
-                //      topLeft -------- topRight
-                //         |                 |
-                //         |      (x,y)      |
-                //         |                 |
-                //      bottomLeft ----- bottomRight
-                //
-                // 4. Obtener los pesos de interpolación para tx y ty.
-                // 5. Aplicar interpolación horizontal entre los puntos superiores.
-                // 6. Aplicar interpolación horizontal entre los puntos inferiores.
-                // 7. Interpolar verticalmente ambos resultados.
-                //
-                // Para Bilinear se usa directamente t como peso.
-                // Para Bicubic se usa el peso generado por BicubicWeight(t).
+                int cellX = x / latticeSpacing;
+                int cellY = y / latticeSpacing;
 
-                heights[y, x] = 0f;
+                // Clampar para que no exceda los límites de la grilla.
+                cellX = Mathf.Min(cellX, numberOfCells - 1);
+                cellY = Mathf.Min(cellY, numberOfCells - 1);
+
+                // 2. Calcular tx y ty como posición relativa dentro de esa celda.
+                float tx = (x - cellX * latticeSpacing) / (float)latticeSpacing;
+                float ty = (y - cellY * latticeSpacing) / (float)latticeSpacing;
+
+                // 3. Obtener los cuatro puntos de control.
+                float topLeft     = controlPoints[cellY,     cellX];
+                float topRight    = controlPoints[cellY,     cellX + 1];
+                float bottomLeft  = controlPoints[cellY + 1, cellX];
+                float bottomRight = controlPoints[cellY + 1, cellX + 1];
+
+                // 4. Obtener los pesos de interpolación para tx y ty.
+                float weightX = GetInterpolationWeight(tx, interpolationMode);
+                float weightY = GetInterpolationWeight(ty, interpolationMode);
+
+                // 5. Interpolar horizontalmente los dos puntos superiores.
+                float top = LinearInterpolation(topLeft, topRight, weightX);
+
+                // 6. Interpolar horizontalmente los dos puntos inferiores.
+                float bottom = LinearInterpolation(bottomLeft, bottomRight, weightX);
+
+                // 7. Interpolar verticalmente ambos resultados.
+                heights[y, x] = LinearInterpolation(top, bottom, weightY);
             }
         }
 
@@ -197,8 +204,7 @@ public static class HeightmapGenerator
     // y posteriormente sobre el eje Y.
     public static float LinearInterpolation(float a, float b, float t)
     {
-        // TODO: implementar la fórmula de interpolación lineal.
-        return 0f;
+        return a * (1f - t) + b * t;
     }
 
     // -------------------------------------------------------------------------
@@ -225,8 +231,7 @@ public static class HeightmapGenerator
     // puntos de control.
     public static float BicubicWeight(float t)
     {
-        // TODO: implementar la función s(t).
-        return 0f;
+        return -2f * t * t * t + 3f * t * t;
     }
 
     // Devuelve el peso que debe utilizar la interpolación.
@@ -264,7 +269,15 @@ public static class HeightmapGenerator
     {
         float[,] points = new float[resolution, resolution];
 
-        // TODO: generar los puntos de control utilizados por Value Noise.
+        System.Random random = new System.Random(seed);
+
+        for (int y = 0; y < resolution; y++)
+        {
+            for (int x = 0; x < resolution; x++)
+            {
+                points[y, x] = (float)random.NextDouble();
+            }
+        }
 
         return points;
     }

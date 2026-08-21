@@ -130,7 +130,7 @@ public static class DiamondSquareGenerator
 
         while (stepSize > 1)
         {
-            // TODO: PROCESO ITERATIVO
+            // PROCESO ITERATIVO
             //
             // 1. Ejecutar DiamondStep utilizando:
             //      heights, stepSize, currentRoughness y random.
@@ -138,6 +138,9 @@ public static class DiamondSquareGenerator
             // 2. Ejecutar SquareStep utilizando los mismos parámetros.
             //
             // Después de ambos pasos se cambia a una escala menor.
+
+            DiamondStep(heights, stepSize, currentRoughness, random);
+            SquareStep(heights, stepSize, currentRoughness, random);
 
             stepSize /= 2;
             currentRoughness *= roughnessDecay;
@@ -244,7 +247,7 @@ public static class DiamondSquareGenerator
         int resolution = heights.GetLength(0);
         int halfStep = stepSize / 2;
 
-        // TODO: DIAMOND STEP
+        // DIAMOND STEP
         //
         // 1. Recorrer los centros de cada cuadrado.
         // 2. Obtener las cuatro esquinas utilizando halfStep.
@@ -252,6 +255,25 @@ public static class DiamondSquareGenerator
         // 4. Añadir RandomOffset(random, roughness).
         // 5. Mantener la nueva altura dentro del rango [0,1].
         // 6. Guardar el resultado en el punto central.
+
+        // Los centros de los cuadrados se ubican en:
+        //   y = halfStep, halfStep + stepSize, halfStep + 2*stepSize, ...
+        //   x = halfStep, halfStep + stepSize, halfStep + 2*stepSize, ...
+        for (int y = halfStep; y < resolution; y += stepSize)
+        {
+            for (int x = halfStep; x < resolution; x += stepSize)
+            {
+                // Las cuatro esquinas del cuadrado actual
+                float topLeft     = heights[y - halfStep, x - halfStep];
+                float topRight    = heights[y - halfStep, x + halfStep];
+                float bottomLeft  = heights[y + halfStep, x - halfStep];
+                float bottomRight = heights[y + halfStep, x + halfStep];
+
+                float average = (topLeft + topRight + bottomLeft + bottomRight) / 4f;
+
+                heights[y, x] = Mathf.Clamp01(average + RandomOffset(random, roughness));
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -385,7 +407,7 @@ public static class DiamondSquareGenerator
         int resolution = heights.GetLength(0);
         int halfStep = stepSize / 2;
 
-        // TODO: SQUARE STEP
+        // SQUARE STEP
         //
         // 1. Recorrer las filas separadas por halfStep.
         // 2. Determinar si la fila comienza en x = 0 o x = halfStep.
@@ -400,6 +422,56 @@ public static class DiamondSquareGenerator
         // 6. Añadir RandomOffset(random, roughness).
         // 7. Mantener el resultado dentro de [0,1].
         // 8. Guardar la nueva altura.
+
+        // Las filas del Square Step se recorren cada halfStep.
+        // Para cada fila y, el desplazamiento inicial en x depende de la paridad
+        // de la fila: las filas pares (múltiplos de stepSize) comienzan en halfStep,
+        // las impares (desplazadas halfStep) comienzan en 0.
+        for (int y = 0; y < resolution; y += halfStep)
+        {
+            // Si (y / halfStep) es par, el primer x de esta fila es halfStep;
+            // si es impar, el primer x es 0.
+            int rowIndex = y / halfStep;
+            int xStart = (rowIndex % 2 == 0) ? halfStep : 0;
+
+            for (int x = xStart; x < resolution; x += stepSize)
+            {
+                float sum = 0f;
+                int count = 0;
+
+                // Vecino izquierdo
+                if (x - halfStep >= 0)
+                {
+                    sum += heights[y, x - halfStep];
+                    count++;
+                }
+
+                // Vecino derecho
+                if (x + halfStep < resolution)
+                {
+                    sum += heights[y, x + halfStep];
+                    count++;
+                }
+
+                // Vecino superior
+                if (y - halfStep >= 0)
+                {
+                    sum += heights[y - halfStep, x];
+                    count++;
+                }
+
+                // Vecino inferior
+                if (y + halfStep < resolution)
+                {
+                    sum += heights[y + halfStep, x];
+                    count++;
+                }
+
+                float average = sum / count;
+
+                heights[y, x] = Mathf.Clamp01(average + RandomOffset(random, roughness));
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
