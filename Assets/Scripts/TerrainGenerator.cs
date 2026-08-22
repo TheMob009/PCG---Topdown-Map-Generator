@@ -36,7 +36,7 @@ public class TerrainGenerator : MonoBehaviour
     [Tooltip("Cantidad de muestras utilizadas para representar las alturas. Una resolución mayor permite representar más detalle sin cambiar el tamaño físico del terreno.")]
     [SerializeField] private HeightmapResolution heightmapResolution = HeightmapResolution.R129;
 
-    private const float TERRAIN_HEIGHT = 1f;
+    private const float TERRAIN_HEIGHT = 10f;
 
     [Tooltip("Semilla utilizada por el generador pseudoaleatorio. Los mismos parámetros y la misma semilla producen el mismo resultado.")]
     [SerializeField] private int seed = 12345;

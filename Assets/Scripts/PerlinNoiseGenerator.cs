@@ -344,6 +344,49 @@ public static class PerlinNoiseGenerator
         int seed,
         HeightmapGenerator.InterpolationMode interpolationMode)
     {
+        int x0 = Mathf.FloorToInt(x);//permite guardar la coordenada inferior si x= 1.5 entonces x0 = 1
+        //sirve para localizar la celda X es el limite izquierdo de las 4 puntas
+        int y0 = Mathf.FloorToInt(y);//lo mismo para la celda Y, limite inferior según las coordenadas númericas
+        //es el 0,0 (el origen)
+
+        float localX = x - x0;
+        float localY = y - y0;
+
+        //las 4 esquinas del gradiente 
+        Vector2 gradient00 = GetGradient(x0, y0, seed);
+        Vector2 gradient10 = GetGradient(x0 + 1, y0, seed);
+        Vector2 gradient01 = GetGradient(x0, y0 + 1, seed);
+        Vector2 gradient11 = GetGradient(x0 + 1, y0 + 1, seed);
+
+        //Vectores de desplazamiento del punto
+        Vector2 desplazamiento00 = new Vector2(localX, localY);
+        Vector2 desplazamiento10 = new Vector2(localX - 1, localY);
+        Vector2 desplazamiento01 = new Vector2(localX, localY - 1);
+        Vector2 desplazamiento11 = new Vector2(localX - 1,localY - 1);
+        //con esto obtengo el resto y permite que los vectores sepan donde está exactamente mi punto sin que se salga del cuadrado
+
+        //x1*x2 + y1*y2
+        float escalar00 = Vector2.Dot(gradient00, desplazamiento00);
+        float escalar10 = Vector2.Dot(gradient10, desplazamiento10);
+        float escalar01 = Vector2.Dot(gradient01, desplazamiento01);
+        float escalar11 = Vector2.Dot(gradient11, desplazamiento11);
+        //si es positivo es una montaña si es negativo es un valle
+
+        //sin esto no compila porque se necesita un único valor float
+
+        //calculo de pesos, permite elegir un método de interpolación para suavizar el terreno
+        //si omito este paso se verá poligonado o puntiagudo
+
+        float weightX = HeightmapGenerator.GetInterpolationWeight(localX, interpolationMode);
+        float weightY = HeightmapGenerator.GetInterpolationWeight(localY, interpolationMode);
+
+        //Interpolar los dos resultados superiores
+        float top = HeightmapGenerator.LinearInterpolation(escalar00, escalar10, weightX);
+        float bottom = HeightmapGenerator.LinearInterpolation(escalar01, escalar11, weightX);
+        float both = HeightmapGenerator.LinearInterpolation(top, bottom, weightY);
+
+        return both;
+        //Implementar acá
         // TODO: PERLIN / GRADIENT NOISE 2D
         //
         // Para cada posición (x, y):
@@ -366,7 +409,6 @@ public static class PerlinNoiseGenerator
         //      HeightmapGenerator.GetInterpolationWeight(...)
         //      HeightmapGenerator.LinearInterpolation(...)
 
-        return 0f;
     }
 
     // -------------------------------------------------------------------------
