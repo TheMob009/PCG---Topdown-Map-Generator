@@ -186,6 +186,21 @@ public class MissionGenerator : MonoBehaviour
             return;
         }
 
+        string current = startSymbol; //Current es el estado de la cadena.
+        //en este momento current = M
+        //Para reprensentar el inicio de la cadena es necesario aplicar startProduction
+        //No se inicia por startProduction porque si se modifica la regla o el simbolo de partida cambia la grámatica
+        
+        current = startProduction;
+        //En este momento current pasó de M -> STG aún no inicia la expansión secuencial T
+        System.Random random = new System.Random(seed);
+        //Se utiliza la semilla para replicar la misma secuencia de expansión
+        //Es necesario conocer la posición de T dentro de la cadena
+        //No se utiliza replace debido a que modificaría toda la cadena.
+        //Hay que preguntar en que posición aparece por primera vez el simbolo
+        int taskIndex = current.IndexOf(taskSymbol);
+
+
 
         // TODO: GENERACIÓN SECUENCIAL DE LA MISIÓN
         //
