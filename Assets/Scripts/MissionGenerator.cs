@@ -190,16 +190,56 @@ public class MissionGenerator : MonoBehaviour
         //en este momento current = M
         //Para reprensentar el inicio de la cadena es necesario aplicar startProduction
         //No se inicia por startProduction porque si se modifica la regla o el simbolo de partida cambia la grámatica
-        
+        List<string> derivation = new List<string>();
+        derivation.Add(current);
         current = startProduction;
+        derivation.Add(current);
         //En este momento current pasó de M -> STG aún no inicia la expansión secuencial T
         System.Random random = new System.Random(seed);
         //Se utiliza la semilla para replicar la misma secuencia de expansión
-        //Es necesario conocer la posición de T dentro de la cadena
-        //No se utiliza replace debido a que modificaría toda la cadena.
-        //Hay que preguntar en que posición aparece por primera vez el simbolo
-        int taskIndex = current.IndexOf(taskSymbol);
 
+        int step = 0;
+        while (step < expansionSteps)
+        {
+
+            //Es necesario conocer la posición de T dentro de la cadena
+            //No se utiliza replace debido a que modificaría toda la cadena.
+            //Hay que preguntar en que posición aparece por primera vez el simbolo
+            //¿Donde está la T?
+            int taskIndex = current.IndexOf(taskSymbol);
+            //ahora mismo current es STG por lo que hay una T así que TaskIndex = 1
+            //ahora hay que elegir las task production de forma aleatoria
+            //{CT, ET, RT,  KTL} 
+            //¿Que regla usar?
+            int productionIndex = random.Next(0, taskProductions.Count);//se utiliza el taskProduction.Count como limite superior
+                                                                        //para asegurarse que siempre se seleccione una de las 4 reglas.
+            string production = taskProductions[productionIndex];//guarda el indice en una variable para saber que regla es
+                                                                 //Se debe construir una cadena con esta formula: ANTES + PRODUCCIÓN + DESPUÉS
+            /*
+             * Ejemplo STG con index 1 y production KTL
+             * 
+                ANTES   T   DESPUÉS
+
+                 S      T     G
+                 S     KTL    G
+
+            Resultado: SKTLG
+             */
+
+            //Se va a utilizar stringbuilder ya que permite crear y modificar texto
+            //así se copia current para modificarlo
+            StringBuilder currentCopy = new StringBuilder(current);
+            //gracias a stringbuilder se puede modificar cualquier posición dentro de la cadena
+            //tiene un método insert y un remove
+            currentCopy.Remove(taskIndex, 1);//borrar el caracter T (siempre estará en la posición 1)
+            currentCopy.Insert(taskIndex, production);//se inserta la regla en la posicion 1
+            current = currentCopy.ToString();//se hace un cast para que currentCopy sea un string ya que es de tipo builder
+            derivation.Add(current);
+
+
+            step++;
+        }
+        
 
 
         // TODO: GENERACIÓN SECUENCIAL DE LA MISIÓN
