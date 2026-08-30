@@ -194,6 +194,8 @@ public class MissionGenerator : MonoBehaviour
         derivation.Add(current);
         current = startProduction;
         derivation.Add(current);
+        //variable para recorrer después de las 4 expansiones
+        StringBuilder missionDescription = new StringBuilder();
         //En este momento current pasó de M -> STG aún no inicia la expansión secuencial T
         System.Random random = new System.Random(seed);
         //Se utiliza la semilla para replicar la misma secuencia de expansión
@@ -209,6 +211,10 @@ public class MissionGenerator : MonoBehaviour
             int taskIndex = current.IndexOf(taskSymbol);
             //ahora mismo current es STG por lo que hay una T así que TaskIndex = 1
             //ahora hay que elegir las task production de forma aleatoria
+            if (taskIndex == -1)
+            {
+                break;
+            }
             //{CT, ET, RT,  KTL} 
             //¿Que regla usar?
             int productionIndex = random.Next(0, taskProductions.Count);//se utiliza el taskProduction.Count como limite superior
@@ -239,8 +245,38 @@ public class MissionGenerator : MonoBehaviour
 
             step++;
         }
-        
+        //una vez completada las 4 expansiones todas las T restantes se cambian por C
+        current = current.Replace(taskSymbol, terminalProduction);
+        derivation.Add(current);
 
+        //este bucle recorre la descripción perimitendo traducir la cadena en la misión
+        foreach (char symbol in current)
+        {
+            string description = GetDescription(symbol);
+            if (description != null)
+            {
+                //AppendLine es parte de StringBuilder y permite agregar texto más salto de linea
+                missionDescription.AppendLine(description);
+            }
+        }
+        //Imprimir cadena
+        Debug.Log(startSymbol + " -> " + startProduction);
+
+        foreach (string production in taskProductions)
+        {
+            Debug.Log(taskSymbol + " -> " + production);
+        }
+
+        Debug.Log(taskSymbol + "->" + terminalProduction + "Finalizó la generación");
+
+        //Recorrer la derivación
+        for(int i = 0; i < derivation.Count; i++)
+        {
+            Debug.Log("Paso " + i + " : " +  derivation[i]);
+        }
+
+        Debug.Log("Cadena final :" + current);
+        Debug.Log(missionDescription.ToString());
 
         // TODO: GENERACIÓN SECUENCIAL DE LA MISIÓN
         //
