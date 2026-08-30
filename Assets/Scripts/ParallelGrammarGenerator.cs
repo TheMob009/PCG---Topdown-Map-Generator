@@ -152,19 +152,64 @@ public class ParallelGrammarGenerator : MonoBehaviour
         int iterations,
         List<string> derivation = null)
     {
-        // TODO: EXPANSIÓN PARALELA
-        //
-        // Implementar la expansión de la gramática considerando:
-        //
-        // 1. Comenzar desde el axioma.
-        // 2. Aplicar las reglas durante la cantidad indicada de iteraciones.
-        // 3. Evaluar todos los símbolos de cada iteración de forma paralela.
-        // 4. Utilizar la regla correspondiente cuando exista.
-        // 5. Mantener sin cambios los símbolos que no posean una regla.
-        // 6. Registrar el resultado de cada iteración en derivation.
-        // 7. Retornar la cadena obtenida al finalizar.
+        // Comenzar desde el axioma.
+        string current = axiom;
 
-        return axiom;
+        // Registrar la iteración 0 (el axioma).
+        if (derivation != null)
+        {
+            derivation.Add(current);
+        }
+
+        // Construir un diccionario para búsqueda rápida de reglas.
+        Dictionary<string, string> ruleMap =
+            new Dictionary<string, string>();
+
+        if (rules != null)
+        {
+            foreach (LSystemRule rule in rules)
+            {
+                if (rule != null &&
+                    !string.IsNullOrEmpty(rule.predecessor))
+                {
+                    ruleMap[rule.predecessor] = rule.successor;
+                }
+            }
+        }
+
+        // Aplicar las reglas durante la cantidad indicada de iteraciones.
+        for (int i = 0; i < iterations; i++)
+        {
+            StringBuilder next = new StringBuilder();
+
+            // Evaluar todos los símbolos de la cadena actual de forma paralela.
+            foreach (char symbol in current)
+            {
+                string symbolStr = symbol.ToString();
+
+                // Utilizar la regla correspondiente cuando exista.
+                if (ruleMap.ContainsKey(symbolStr))
+                {
+                    next.Append(ruleMap[symbolStr]);
+                }
+                else
+                {
+                    // Mantener sin cambios los símbolos que no posean una regla.
+                    next.Append(symbol);
+                }
+            }
+
+            current = next.ToString();
+
+            // Registrar el resultado de cada iteración en derivation.
+            if (derivation != null)
+            {
+                derivation.Add(current);
+            }
+        }
+
+        // Retornar la cadena obtenida al finalizar.
+        return current;
     }
 
 

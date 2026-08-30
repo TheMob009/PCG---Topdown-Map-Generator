@@ -371,24 +371,163 @@ public class LSystemTreeGenerator : MonoBehaviour
         string sequence,
         float activeAngle)
     {
-        // TODO: TURTLE GRAPHICS 2D Y 3D
-        //
-        // Recorrer los símbolos de sequence e implementar:
-        //
-        // 1. El estado inicial de la tortuga.
-        // 2. Movimiento con y sin dibujo mediante F y f.
-        // 3. Rotaciones 2D mediante + y -.
-        // 4. Guardado y recuperación del estado mediante [ y ].
-        // 5. Rotaciones adicionales del modo 3D mediante &, ^, \ y /.
-        //
-        // Utilizar:
-        //
-        //      Stack<TurtleState>
-        //      CreateBranch(...)
-        //      Quaternion
-        //
-        // Considerar que posición y orientación deben recuperarse juntas
-        // al retornar desde una rama.
+        // 1. Estado inicial de la tortuga.
+        TurtleState state = new TurtleState(
+            Vector3.zero,
+            Quaternion.identity
+        );
+
+        // Pila para almacenar y recuperar estados en ramificaciones.
+        Stack<TurtleState> stateStack =
+            new Stack<TurtleState>();
+
+        // 2. Recorrer todos los símbolos de la secuencia.
+        foreach (char symbol in sequence)
+        {
+            switch (symbol)
+            {
+                // F: avanzar y dibujar un segmento.
+                case 'F':
+                {
+                    Vector3 direction =
+                        state.rotation * Vector3.up;
+
+                    Vector3 newPosition =
+                        state.position +
+                        direction * segmentLength;
+
+                    CreateBranch(
+                        state.position,
+                        newPosition
+                    );
+
+                    state.position = newPosition;
+                    break;
+                }
+
+                // f: avanzar sin dibujar.
+                case 'f':
+                {
+                    Vector3 direction =
+                        state.rotation * Vector3.up;
+
+                    state.position +=
+                        direction * segmentLength;
+
+                    break;
+                }
+
+                // +: rotar en sentido positivo (yaw izquierda, alrededor del eje forward).
+                case '+':
+                {
+                    state.rotation *=
+                        Quaternion.AngleAxis(
+                            activeAngle,
+                            Vector3.forward
+                        );
+
+                    break;
+                }
+
+                // -: rotar en sentido negativo (yaw derecha, alrededor del eje forward).
+                case '-':
+                {
+                    state.rotation *=
+                        Quaternion.AngleAxis(
+                            -activeAngle,
+                            Vector3.forward
+                        );
+
+                    break;
+                }
+
+                // [: guardar el estado actual en la pila.
+                case '[':
+                {
+                    stateStack.Push(state);
+                    break;
+                }
+
+                // ]: recuperar el último estado almacenado.
+                case ']':
+                {
+                    if (stateStack.Count > 0)
+                    {
+                        state = stateStack.Pop();
+                    }
+
+                    break;
+                }
+
+                // &: pitch down (rotación alrededor del eje right). Solo en 3D.
+                case '&':
+                {
+                    if (generationMode ==
+                        GenerationMode.ThreeD)
+                    {
+                        state.rotation *=
+                            Quaternion.AngleAxis(
+                                activeAngle,
+                                Vector3.right
+                            );
+                    }
+
+                    break;
+                }
+
+                // ^: pitch up (rotación alrededor del eje right). Solo en 3D.
+                case '^':
+                {
+                    if (generationMode ==
+                        GenerationMode.ThreeD)
+                    {
+                        state.rotation *=
+                            Quaternion.AngleAxis(
+                                -activeAngle,
+                                Vector3.right
+                            );
+                    }
+
+                    break;
+                }
+
+                // \: roll clockwise (rotación alrededor del eje up). Solo en 3D.
+                case '\\':
+                {
+                    if (generationMode ==
+                        GenerationMode.ThreeD)
+                    {
+                        state.rotation *=
+                            Quaternion.AngleAxis(
+                                activeAngle,
+                                Vector3.up
+                            );
+                    }
+
+                    break;
+                }
+
+                // /: roll counter-clockwise (rotación alrededor del eje up). Solo en 3D.
+                case '/':
+                {
+                    if (generationMode ==
+                        GenerationMode.ThreeD)
+                    {
+                        state.rotation *=
+                            Quaternion.AngleAxis(
+                                -activeAngle,
+                                Vector3.up
+                            );
+                    }
+
+                    break;
+                }
+
+                // Símbolos sin interpretación: se ignoran.
+                default:
+                    break;
+            }
+        }
     }
 
 
