@@ -210,6 +210,11 @@ public class LSystemTreeGenerator : MonoBehaviour
         int activeIterations;
         float activeAngle;
 
+        // Aca se selecciona el set de parametros (axioma, reglas, iteraciones, angulo)
+        // segun el modo 2D o 3D, llama a Generate() para obtener la cadena simbolica, y
+        // luego pasa esa cadena a Interpret() para convertirla en geometria.
+        // Se podria decir que es el puente entre la etapa simbolica, o sea, la gramatica
+        // y la etapa geométrica, o sea, turtle graphics.
 
         if (generationMode ==
             GenerationMode.TwoD)
@@ -371,6 +376,10 @@ public class LSystemTreeGenerator : MonoBehaviour
         string sequence,
         float activeAngle)
     {
+        // La tortuga posee una posicion, y una rotacion (en Quaternion).
+        // Tambien posee una pila que le permite manejar ramificaciones
+        // Asi, al entrar a una rama, guarda su estado,y al salir, lo recupera.
+
         // 1. Estado inicial de la tortuga.
         TurtleState state = new TurtleState(
             Vector3.zero,
@@ -381,7 +390,8 @@ public class LSystemTreeGenerator : MonoBehaviour
         Stack<TurtleState> stateStack =
             new Stack<TurtleState>();
 
-        // 2. Recorrer todos los símbolos de la secuencia.
+        // 2. Recorrer todos los símbolos de la secuencia generada por la gramatica
+        // simbolo por simbolo, y ejecuta una accion distinta segun este.   
         foreach (char symbol in sequence)
         {
             switch (symbol)
@@ -389,23 +399,30 @@ public class LSystemTreeGenerator : MonoBehaviour
                 // F: avanzar y dibujar un segmento.
                 case 'F':
                 {
+                    // Se toma el vector "hacia arriba", y lo rota segun la orientacion
+                    // actual de la tortuga. De esta forma se obtiene la direccion real de
+                    // avance en el mundo.
                     Vector3 direction =
                         state.rotation * Vector3.up;
 
+                    // Se calcula la nueva posicion avanzando "segmentLength" en la direccion
+                    // asignada anteriormente.
                     Vector3 newPosition =
                         state.position +
                         direction * segmentLength;
 
+                    // (SOLO VISUAL) Se dibuja el segmento.
                     CreateBranch(
                         state.position,
                         newPosition
                     );
 
+                    // Se actualiza el state.position actual.
                     state.position = newPosition;
                     break;
                 }
 
-                // f: avanzar sin dibujar.
+                // f: lo mismo que lo anterior, tan solo que es avanzar sin dibujar.
                 case 'f':
                 {
                     Vector3 direction =
@@ -420,9 +437,18 @@ public class LSystemTreeGenerator : MonoBehaviour
                 // +: rotar en sentido positivo (yaw izquierda, alrededor del eje forward).
                 case '+':
                 {
+                    // Se multiplica el state.rotation por un nuevo Quaternion.AngleAxis
+                    // donde activeAngle es el parametro establecido en el inspector para
+                    // determinar cuantos grados gira según si es 2D o 3D.
+
+                    // La nueva rotacion se aplica despues de la orientacion actual, o sea,
+                    // la rotacion es relativa a la tortuga, no el mundo.
+                  
                     state.rotation *=
                         Quaternion.AngleAxis(
                             activeAngle,
+                            // Se rota alrededor del eje forward, que actual como
+                            // el eje perpendicular al plano 2D
                             Vector3.forward
                         );
 
@@ -432,23 +458,29 @@ public class LSystemTreeGenerator : MonoBehaviour
                 // -: rotar en sentido negativo (yaw derecha, alrededor del eje forward).
                 case '-':
                 {
-                    state.rotation *=
+                      // Se multiplica el state.rotation por un nuevo Quaternion.AngleAxis
+                      // La nueva rotacion se aplica despues de la orientacion actual, o sea,
+                      // la rotacion es relativa a la tortuga, no el mundo.
+                        state.rotation *=
                         Quaternion.AngleAxis(
                             -activeAngle,
+                            // Se rota alrededor del eje forward, que actual como
+                            // el eje perpendicular al plano 2D
                             Vector3.forward
                         );
 
                     break;
                 }
 
-                // [: guardar el estado actual en la pila.
+                // [: guardar una copia del estado actual (posicion y rotacion)
+                // en la pila antes de entrar a una subrama.
                 case '[':
                 {
                     stateStack.Push(state);
                     break;
                 }
 
-                // ]: recuperar el último estado almacenado.
+                // ]: recuperar el último estado almacenado y lo restaura.
                 case ']':
                 {
                     if (stateStack.Count > 0)
@@ -458,6 +490,10 @@ public class LSystemTreeGenerator : MonoBehaviour
 
                     break;
                 }
+
+                // Rotaciones 3D (& ^ \ /)
+                // SOLO PARA 3D. Estan protegidas por el if (generationMode) en caso
+                // de que existan estos simbolos en configuracion 2D.
 
                 // &: pitch down (rotación alrededor del eje right). Solo en 3D.
                 case '&':

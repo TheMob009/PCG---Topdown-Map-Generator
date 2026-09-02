@@ -146,25 +146,31 @@ public class ParallelGrammarGenerator : MonoBehaviour
     // verificar que las reglas están siendo aplicadas correctamente.
     //
 
+    // Metodo que es el corazon de la cadena simbolica, recibe el axioma inicial, una lista
+    // de reglas, un numero de iteraciones y devuelve la cadena final
     public static string Generate(
         string axiom,
         List<LSystemRule> rules,
         int iterations,
         List<string> derivation = null)
     {
-        // Comenzar desde el axioma.
+        // Comenzar desde el axioma inicial.
         string current = axiom;
 
-        // Registrar la iteración 0 (el axioma).
+        // Registrar la iteración 0 (el axioma) para el historial ( si es que es necesario)
         if (derivation != null)
         {
             derivation.Add(current);
         }
 
-        // Construir un diccionario para búsqueda rápida de reglas.
+
+        // Crea un diccionario
         Dictionary<string, string> ruleMap =
             new Dictionary<string, string>();
 
+        // Convierte la lista de reglas (predecesor / A -> sucesor / B) en un diccionario,
+        // para poder buscar en O(1) si un simbolo tiene una regla, en vez de recorrer toda
+        // la lista cada vez que se desea verificar una regla.
         if (rules != null)
         {
             foreach (LSystemRule rule in rules)
@@ -177,9 +183,19 @@ public class ParallelGrammarGenerator : MonoBehaviour
             }
         }
 
+
+        // Esto es lo importante y lo que lo hace PARALELO: 
+        // en cada iteración se recorre la cadena current símbolo por símbolo, y 
+        // se construye una cadena nueva (next) en un StringBuilder aparte. 
+        // Recién al terminar de recorrer toda la cadena, current se reemplaza por next.
+
         // Aplicar las reglas durante la cantidad indicada de iteraciones.
         for (int i = 0; i < iterations; i++)
         {
+            // Se usa StringBuilder por el rendimiento
+            // A diferencia de un string comun, un StringBuilder modifica un
+            // buffer de memoria interno, reescalable, de manera directa,
+            // sin crear un nuevo string de cero cada vez que se desee modificarlo
             StringBuilder next = new StringBuilder();
 
             // Evaluar todos los símbolos de la cadena actual de forma paralela.
@@ -187,18 +203,22 @@ public class ParallelGrammarGenerator : MonoBehaviour
             {
                 string symbolStr = symbol.ToString();
 
-                // Utilizar la regla correspondiente cuando exista.
-                if (ruleMap.ContainsKey(symbolStr))
+                // Si el diccionario tiene una regla para el simbolo
+                if (ruleMap.ContainsKey(symbolStr)) 
                 {
+                    // Se agrega el simbolo correspondiente al final de "next"
                     next.Append(ruleMap[symbolStr]);
                 }
                 else
                 {
                     // Mantener sin cambios los símbolos que no posean una regla.
+                    // O sea, se agrega el simbolo, sin cambios, al final de "next"
+                    // Aca se agregan los +, -, [, ], etc.
                     next.Append(symbol);
                 }
             }
 
+            // Se reemplaza la cadena anterior, por la nueva hecha en "next"
             current = next.ToString();
 
             // Registrar el resultado de cada iteración en derivation.
