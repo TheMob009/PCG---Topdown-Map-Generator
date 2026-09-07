@@ -22,14 +22,14 @@ public class BspMapGenerator : MonoBehaviour
     [SerializeField] private int mapWidth = 60;
     [SerializeField] private int mapHeight = 40;
 
-    [Header("Par�metros de partici�n BSP")]
-    [Tooltip("Tama�o m�nimo de una partici�n. Evita salas o cortes demasiado peque�os.")]
+    [Header("Parámetros de partición BSP")]
+    [Tooltip("Tamaño minimo de una partición. Evita salas o cortes demasiado pequeños.")]
     [SerializeField] private int minPartitionSize = 8;
-    [Tooltip("Cu�ntas veces se intenta subdividir recursivamente. M�s iteraciones = m�s salas.")]
+    [Tooltip("Cuantas veces se intenta subdividir recursivamente. M�s iteraciones = más salas.")]
     [SerializeField] private int maxIterations = 5;
 
-    [Header("Par�metros de las salas")]
-    [Tooltip("Margen entre el borde de la partici�n y el borde de la sala.")]
+    [Header("Parámetros de las salas")]
+    [Tooltip("Margen entre el borde de la partición y el borde de la sala.")]
     [SerializeField] private int roomPadding = 1;
     [SerializeField] private int minRoomSize = 4;
 
