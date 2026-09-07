@@ -35,6 +35,12 @@ public class RandomWalkGenerator : MonoBehaviour
     [SerializeField] private Tilemap wallTilemap;
     [SerializeField] private TileBase floorTile;
     [SerializeField] private TileBase wallTile;
+    [Tooltip("Tile especial para los túneles de Random Walk (ej. tierra, cueva). Si es nulo se usa el mismo floorTile.")]
+    [SerializeField] private TileBase walkFloorTile;
+
+    [Header("Visualización")]
+[SerializeField] private bool showGizmo = true;
+
 
     private System.Random _rng;
 
@@ -106,6 +112,17 @@ public class RandomWalkGenerator : MonoBehaviour
         if (fTilemap != null || wTilemap != null)
         {
             MapUtils.DrawTilemap(result, fTilemap, wTilemap, fTile, wTile);
+
+            // Si se configuró un tile especial para el camino, lo aplicamos
+            // sobre las celdas talladas por el Random Walk para diferenciarlas
+            // visualmente de las salas y pasillos del BSP.
+            if (walkFloorTile != null && fTilemap != null)
+            {
+                foreach (var cell in _carvedByWalk)
+                {
+                    fTilemap.SetTile(new Vector3Int(cell.x, cell.y, 0), walkFloorTile);
+                }
+            }
         }
     }
 
@@ -176,6 +193,7 @@ public class RandomWalkGenerator : MonoBehaviour
 
         foreach (var cell in _carvedByWalk)
         {
+            if (Result == null || !showGizmo) return;
             Gizmos.DrawCube(new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0), Vector3.one * 0.5f);
         }
     }
