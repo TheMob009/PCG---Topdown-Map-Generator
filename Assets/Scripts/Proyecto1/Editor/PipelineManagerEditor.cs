@@ -19,9 +19,15 @@ public class PipelineManagerEditor : Editor
         var pipeline = (PipelineManager)target;
 
         EditorGUILayout.Space(10);
+        if (GUILayout.Button("Configurar Escena TopDown (Grid y Tilemaps)", GUILayout.Height(28)))
+        {
+            TopdownSceneSetup.SetupScene();
+        }
+
+        EditorGUILayout.Space(5);
         EditorGUILayout.LabelField("Pipeline completo", EditorStyles.boldLabel);
 
-        if (GUILayout.Button("Generar Todo (Perlin ? BSP ? Random Walk)", GUILayout.Height(35)))
+        if (GUILayout.Button("Generar Todo (Perlin > BSP > Random Walk > Mision)", GUILayout.Height(35)))
         {
             RunAction(pipeline, "Generar Pipeline Completo", pipeline.GenerateAll);
         }
@@ -53,12 +59,29 @@ public class PipelineManagerEditor : Editor
             {
                 RunAction(pipeline, "Generar Random Walk", pipeline.GenerateRandomWalkOnly);
             }
+
+            if (GUILayout.Button("4. Mision", GUILayout.Height(25)))
+            {
+                RunAction(pipeline, "Generar Mision", pipeline.GenerateMissionGrammarOnly);
+            }
+
+            if (GUILayout.Button("5. Visualizar", GUILayout.Height(25)))
+            {
+                RunAction(pipeline, "Visualizar Marcadores", pipeline.RenderMissionVisualizer);
+            }
+        }
+
+        EditorGUILayout.Space(5);
+        if (GUILayout.Button("Limpiar Todo (Tilemaps y Marcadores)", GUILayout.Height(25)))
+        {
+            RunAction(pipeline, "Limpiar Todo", pipeline.ClearAll);
         }
 
         EditorGUILayout.HelpBox(
             "'Generar Todo' respeta el orden del plan: primero calcula el ruido " +
             "ambiental, luego la estructura de salas y pasillos, y finalmente agrega " +
-            "las galerías secundarias sobre esa estructura.\n\n" +
+            "las galerias secundarias sobre esa estructura, y por ultimo " +
+            "genera la mision sobre las salas del BSP.\n\n" +
             "Los botones individuales sirven para iterar sobre una sola etapa sin " +
             "rehacer las anteriores (por ejemplo, probar otra semilla de Random Walk " +
             "manteniendo el mismo BSP).",
@@ -66,7 +89,7 @@ public class PipelineManagerEditor : Editor
     }
 
     /// <summary>
-    /// Envuelve cualquier acción del pipeline con Undo y marcado de escena
+    /// Envuelve cualquier acciï¿½n del pipeline con Undo y marcado de escena
     /// como sucia, para que los cambios generados en editor no se pierdan
     /// silenciosamente y puedan deshacerse con Ctrl+Z.
     /// </summary>

@@ -4,12 +4,12 @@ using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Segunda etapa del pipeline: parte de un mapa ya generado por BSP y agrega
-/// caminos secundarios más irregulares mediante agentes de Random Walk.
+/// caminos secundarios mÃ¡s irregulares mediante agentes de Random Walk.
 ///
-/// En la mina se interpretan como galerías secundarias o túneles naturales;
+/// En la mina se interpretan como galerÃ­as secundarias o tÃºneles naturales;
 /// en la colonia, como corredores o ductos de mantenimiento. A diferencia de
 /// los pasillos del BSP (rectos, en L), estos agentes caminan al azar paso a
-/// paso y pueden enroscarse libremente, dando un resultado más orgánico.
+/// paso y pueden enroscarse libremente, dando un resultado mÃ¡s orgÃ¡nico.
 ///
 /// Requiere que un BspMapGenerator ya haya corrido antes (Result != null).
 /// </summary>
@@ -23,7 +23,7 @@ public class RandomWalkGenerator : MonoBehaviour
     [SerializeField] private int agentCount = 4;
     [Tooltip("Cantidad fija de pasos que camina cada agente.")]
     [SerializeField] private int stepsPerAgent = 40;
-    [Tooltip("Ancho del túnel tallado (1 = camino de una celda, más ancho da galerías más amplias).")]
+    [Tooltip("Ancho del tÃºnel tallado (1 = camino de una celda, mÃ¡s ancho da galerÃ­as mÃ¡s amplias).")]
     [SerializeField] private int walkWidth = 1;
 
     [Header("Semilla")]
@@ -48,14 +48,14 @@ public class RandomWalkGenerator : MonoBehaviour
     };
 
     /// <summary>
-    /// Referencia al mismo resultado que generó el BSP. Se modifica in-place:
+    /// Referencia al mismo resultado que generÃ³ el BSP. Se modifica in-place:
     /// Random Walk no crea un grid nuevo, sino que agrega piso sobre el existente.
     /// </summary>
     public BspMapResult Result => bspGenerator != null ? bspGenerator.Result : null;
 
     /// <summary>
-    /// Celdas que este Random Walk agregó como piso nuevo (no las que ya
-    /// venían del BSP). Se usa solo para diferenciar visualmente en los
+    /// Celdas que este Random Walk agregÃ³ como piso nuevo (no las que ya
+    /// venÃ­an del BSP). Se usa solo para diferenciar visualmente en los
     /// Gizmos; no es necesaria para el resto del pipeline.
     /// </summary>
     private readonly HashSet<Vector2Int> _carvedByWalk = new HashSet<Vector2Int>();
@@ -75,13 +75,13 @@ public class RandomWalkGenerator : MonoBehaviour
 
         if (bspGenerator.Result == null)
         {
-            Debug.LogError("[RandomWalkGenerator] El BSP todavía no ha generado un mapa. Genera el BSP primero.");
+            Debug.LogError("[RandomWalkGenerator] El BSP todavÃ­a no ha generado un mapa. Genera el BSP primero.");
             return;
         }
 
         if (bspGenerator.Result.Rooms.Count == 0)
         {
-            Debug.LogWarning("[RandomWalkGenerator] El BSP no tiene salas registradas; no hay desde dónde partir.");
+            Debug.LogWarning("[RandomWalkGenerator] El BSP no tiene salas registradas; no hay desde dÃ³nde partir.");
             return;
         }
 
@@ -95,17 +95,22 @@ public class RandomWalkGenerator : MonoBehaviour
             RunAgent(result);
         }
 
-        // Recalcula las paredes: los nuevos túneles también necesitan su borde.
+        // Recalcula las paredes: los nuevos tÃºneles tambiÃ©n necesitan su borde.
         MapUtils.PaintWalls(result);
 
-        if (floorTilemap != null || wallTilemap != null)
+        var fTilemap = floorTilemap != null ? floorTilemap : bspGenerator.FloorTilemap;
+        var wTilemap = wallTilemap != null ? wallTilemap : bspGenerator.WallTilemap;
+        var fTile = floorTile != null ? floorTile : bspGenerator.FloorTile;
+        var wTile = wallTile != null ? wallTile : bspGenerator.WallTile;
+
+        if (fTilemap != null || wTilemap != null)
         {
-            MapUtils.DrawTilemap(result, floorTilemap, wallTilemap, floorTile, wallTile);
+            MapUtils.DrawTilemap(result, fTilemap, wTilemap, fTile, wTile);
         }
     }
 
     /// <summary>
-    /// Hace caminar a un único agente: parte del centro de una sala aleatoria
+    /// Hace caminar a un Ãºnico agente: parte del centro de una sala aleatoria
     /// y da stepsPerAgent pasos en direcciones aleatorias, tallando piso.
     /// </summary>
     private void RunAgent(BspMapResult result)
@@ -122,7 +127,7 @@ public class RandomWalkGenerator : MonoBehaviour
 
             // Si el siguiente paso se sale del mapa, se ignora ese paso y se
             // intenta de nuevo en el siguiente ciclo (el agente no se mueve
-            // esa iteración, pero sigue gastando pasos, lo que evita loops
+            // esa iteraciÃ³n, pero sigue gastando pasos, lo que evita loops
             // infinitos pegado al borde).
             if (result.InBounds(next.x, next.y))
             {
@@ -130,12 +135,12 @@ public class RandomWalkGenerator : MonoBehaviour
             }
         }
 
-        // Talla también la última posición alcanzada.
+        // Talla tambiÃ©n la Ãºltima posiciÃ³n alcanzada.
         CarveAt(result, pos);
     }
 
     /// <summary>
-    /// Talla piso en la posición dada, expandiendo según walkWidth (igual
+    /// Talla piso en la posiciÃ³n dada, expandiendo segÃºn walkWidth (igual
     /// criterio que el ancho de pasillo usado en el BSP).
     /// </summary>
     private void CarveAt(BspMapResult result, Vector2Int center)
@@ -165,8 +170,8 @@ public class RandomWalkGenerator : MonoBehaviour
     {
         if (Result == null) return;
 
-        // Pinta únicamente las celdas que este Random Walk agregó (no las
-        // que ya venían del BSP), para poder distinguir visualmente su aporte.
+        // Pinta Ãºnicamente las celdas que este Random Walk agregÃ³ (no las
+        // que ya venÃ­an del BSP), para poder distinguir visualmente su aporte.
         Gizmos.color = new Color(0.2f, 0.7f, 0.9f, 0.6f);
 
         foreach (var cell in _carvedByWalk)

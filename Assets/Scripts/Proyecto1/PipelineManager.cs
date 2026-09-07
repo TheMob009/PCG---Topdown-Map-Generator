@@ -1,23 +1,23 @@
 using UnityEngine;
 
 /// <summary>
-/// Orquesta el pipeline completo de generación en el orden definido por el
+/// Orquesta el pipeline completo de generaciï¿½n en el orden definido por el
 /// plan del proyecto:
 ///
-///   SEED -> PERLIN NOISE -> BSP -> RANDOM WALK -> (L-System) -> (Gramática)
+///   SEED -> PERLIN NOISE -> BSP -> RANDOM WALK -> (L-System) -> (Gramï¿½tica)
 ///
-/// Este componente no genera nada por sí mismo: coordina a los tres
+/// Este componente no genera nada por sï¿½ mismo: coordina a los tres
 /// generadores ya existentes, sincroniza sus dimensiones y respeta el orden
 /// de dependencias (Random Walk necesita el resultado del BSP; el BSP puede
-/// opcionalmente consultar a Perlin, pero no depende de él para su geometría).
+/// opcionalmente consultar a Perlin, pero no depende de ï¿½l para su geometrï¿½a).
 ///
-/// Asigna aquí las referencias a PerlinMapGenerator, BspMapGenerator y
+/// Asigna aquï¿½ las referencias a PerlinMapGenerator, BspMapGenerator y
 /// RandomWalkGenerator ya existentes en la escena.
 /// </summary>
 public class PipelineManager : MonoBehaviour
 {
-    [Header("Dimensiones del mapa (fuente única de verdad)")]
-    [Tooltip("Se sincroniza automáticamente hacia Perlin y BSP antes de generar, para que nunca queden desincronizados.")]
+    [Header("Dimensiones del mapa (fuente ï¿½nica de verdad)")]
+    [Tooltip("Se sincroniza automï¿½ticamente hacia Perlin y BSP antes de generar, para que nunca queden desincronizados.")]
     [SerializeField] private int mapWidth = 60;
     [SerializeField] private int mapHeight = 40;
 
@@ -25,12 +25,26 @@ public class PipelineManager : MonoBehaviour
     [SerializeField] private PerlinMapGenerator perlinGenerator;
     [SerializeField] private BspMapGenerator bspGenerator;
     [SerializeField] private RandomWalkGenerator randomWalkGenerator;
+    [SerializeField] private MissionGrammarGenerator missionGrammarGenerator;
+    [SerializeField] private MissionVisualizer missionVisualizer;
+
+    [Header("Ejecucion")]
+    [Tooltip("Si esta activo, genera el mapa completo con sus misiones al iniciar el juego en Play Mode.")]
+    [SerializeField] private bool generateOnStart = true;
 
     public int MapWidth => mapWidth;
     public int MapHeight => mapHeight;
 
+    private void Start()
+    {
+        if (generateOnStart)
+        {
+            GenerateAll();
+        }
+    }
+
     /// <summary>
-    /// Corre el pipeline completo en orden: Perlin -> BSP -> Random Walk.
+    /// Corre el pipeline completo en orden: Perlin -> BSP -> Random Walk -> Mision -> Visualizacion.
     /// Cada etapa deja su resultado disponible antes de que arranque la
     /// siguiente, tal como exige el flujo del plan.
     /// </summary>
@@ -41,10 +55,12 @@ public class PipelineManager : MonoBehaviour
         GeneratePerlinOnly();
         GenerateBspOnly();
         GenerateRandomWalkOnly();
+        GenerateMissionGrammarOnly();
+        RenderMissionVisualizer();
     }
 
     /// <summary>
-    /// Sincroniza las dimensiones configuradas aquí hacia Perlin y BSP.
+    /// Sincroniza las dimensiones configuradas aqui hacia Perlin y BSP.
     /// Random Walk no necesita esto: usa directamente el grid del BSP.
     /// </summary>
     public void SyncDimensions()
@@ -90,5 +106,46 @@ public class PipelineManager : MonoBehaviour
         }
 
         randomWalkGenerator.Generate();
+    }
+
+    public void GenerateMissionGrammarOnly()
+    {
+        if (missionGrammarGenerator == null)
+        {
+            Debug.LogError("[PipelineManager] No hay un MissionGrammarGenerator asignado.");
+            return;
+        }
+
+        if (bspGenerator == null || bspGenerator.Result == null)
+        {
+            Debug.LogError("[PipelineManager] El BSP debe generarse antes que la Gramatica de misiones.");
+            return;
+        }
+
+        missionGrammarGenerator.Generate();
+        RenderMissionVisualizer();
+    }
+
+    public void RenderMissionVisualizer()
+    {
+        if (missionVisualizer != null)
+        {
+            missionVisualizer.RenderMissionMarkers();
+        }
+    }
+
+    /// <summary>
+    /// Limpia los tilemaps del BSP y los marcadores de mision.
+    /// </summary>
+    public void ClearAll()
+    {
+        if (bspGenerator != null)
+        {
+            bspGenerator.ClearMap();
+        }
+        if (missionVisualizer != null)
+        {
+            missionVisualizer.ClearMarkers();
+        }
     }
 }
