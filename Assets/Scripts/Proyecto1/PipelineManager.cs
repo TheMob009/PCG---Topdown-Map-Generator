@@ -92,6 +92,62 @@ public class PipelineManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Sobrescribe los parámetros de todos los generadores con la configuración
+    /// óptima para "Caverna Excavada": salas grandes y espaciadas, túneles
+    /// naturales serpenteantes y vetas ambientales continuas.
+    /// </summary>
+    public void ApplyExcavatedCaveParameters()
+    {
+        SetDimensions(60, 40);
+        SyncDimensions();
+
+        if (perlinGenerator != null)
+        {
+            perlinGenerator.SetFrequency(2.0f);
+            perlinGenerator.SetInterpolationMode(HeightmapGenerator.InterpolationMode.Bicubic);
+            perlinGenerator.SetThreshold(0.5f);
+        }
+
+        if (bspGenerator != null)
+        {
+            bspGenerator.SetMinPartitionSize(14);
+            bspGenerator.SetMaxIterations(3);
+            bspGenerator.SetRoomPadding(3);
+            bspGenerator.SetMinRoomSize(8);
+            bspGenerator.SetCorridorWidth(1);
+        }
+
+        if (randomWalkGenerator != null)
+        {
+            randomWalkGenerator.SetAgentCount(6);
+            randomWalkGenerator.SetStepsPerAgent(100);
+            randomWalkGenerator.SetWalkWidth(1);
+        }
+
+        if (missionGrammarGenerator != null)
+        {
+            missionGrammarGenerator.SetMissionContext(MissionContext.Mina);
+            missionGrammarGenerator.SetExpansionSteps(2);
+        }
+    }
+
+    /// <summary>
+    /// Aplica los parámetros de "Caverna Excavada", genera una nueva semilla aleatoria
+    /// y ejecuta todo el pipeline en orden, renderizando el mapa completo.
+    /// </summary>
+    [ContextMenu("Generar Todo: Caverna Excavada")]
+    public void GenerateAllExcavatedCave()
+    {
+        ApplyExcavatedCaveParameters();
+
+        int randomMasterSeed = System.Environment.TickCount ^ System.Guid.NewGuid().GetHashCode();
+        SetGlobalSeed(randomMasterSeed);
+
+        GenerateAll();
+    }
+
+
+    /// <summary>
     /// Sincroniza las dimensiones configuradas aqui hacia Perlin y BSP.
     /// Random Walk no necesita esto: usa directamente el grid del BSP.
     /// </summary>

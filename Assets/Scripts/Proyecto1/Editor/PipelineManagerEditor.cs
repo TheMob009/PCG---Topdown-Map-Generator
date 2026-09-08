@@ -32,6 +32,15 @@ public class PipelineManagerEditor : Editor
             RunAction(pipeline, "Generar Pipeline Completo", pipeline.GenerateAll);
         }
 
+        EditorGUILayout.Space(3);
+        var prevBg = GUI.backgroundColor;
+        GUI.backgroundColor = new Color(0.75f, 0.90f, 1f);
+        if (GUILayout.Button("Generar Todo: Caverna Excavada", GUILayout.Height(35)))
+        {
+            RunAction(pipeline, "Generar Todo: Caverna Excavada", pipeline.GenerateAllExcavatedCave);
+        }
+        GUI.backgroundColor = prevBg;
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Etapas individuales", EditorStyles.boldLabel);
 
@@ -91,6 +100,8 @@ public class PipelineManagerEditor : Editor
             "ambiental, luego la estructura de salas y pasillos, y finalmente agrega " +
             "las galerias secundarias sobre esa estructura, y por ultimo " +
             "genera la mision sobre las salas del BSP.\n\n" +
+            "'Generar Todo: Caverna Excavada' sobreescribe los parámetros con la calibración " +
+            "de cámaras amplias, túneles sinuosos y vetas continuas, usando una semilla nueva en cada pulsación.\n\n" +
             "Los botones individuales sirven para iterar sobre una sola etapa sin " +
             "rehacer las anteriores (por ejemplo, probar otra semilla de Random Walk " +
             "manteniendo el mismo BSP).",
@@ -98,17 +109,27 @@ public class PipelineManagerEditor : Editor
     }
 
     /// <summary>
-    /// Envuelve cualquier acci�n del pipeline con Undo y marcado de escena
+    /// Envuelve cualquier acción del pipeline con Undo y marcado de escena
     /// como sucia, para que los cambios generados en editor no se pierdan
     /// silenciosamente y puedan deshacerse con Ctrl+Z.
     /// </summary>
     private void RunAction(PipelineManager pipeline, string undoLabel, System.Action action)
     {
-        Undo.RegisterCompleteObjectUndo(pipeline, undoLabel);
+        var targets = new System.Collections.Generic.List<UnityEngine.Object> { pipeline };
+        if (pipeline.PerlinGenerator != null) targets.Add(pipeline.PerlinGenerator);
+        if (pipeline.BspGenerator != null) targets.Add(pipeline.BspGenerator);
+        if (pipeline.RWGenerator != null) targets.Add(pipeline.RWGenerator);
+        if (pipeline.MGGenerator != null) targets.Add(pipeline.MGGenerator);
+
+        Undo.RegisterCompleteObjectUndo(targets.ToArray(), undoLabel);
 
         action.Invoke();
 
-        EditorUtility.SetDirty(pipeline);
+        foreach (var t in targets)
+        {
+            if (t != null) EditorUtility.SetDirty(t);
+        }
+
         if (!Application.isPlaying)
         {
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(pipeline.gameObject.scene);

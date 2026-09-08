@@ -327,12 +327,28 @@ public class MissionGrammarGenerator : MonoBehaviour
         var assignments = new List<MissionRoomAssignment>();
         for (int i = 0; i < symbols.Count; i++)
         {
-            // Si hay más símbolos que salas, reusar las últimas
-            int roomIndex = Mathf.Min(i, visited.Count - 1);
-            BspRoom room = visited[roomIndex];
+            // Fallback: si estamos en la última sala disponible y aún quedan
+            // símbolos por asignar, saltar directamente al símbolo final de
+            // la cadena y descartar los intermedios que no caben.
+            if (i == visited.Count - 1 && i < symbols.Count - 1)
+            {
+                int discarded = symbols.Count - 1 - i;
+                Debug.LogWarning(
+                    "[MissionGrammar] Salas insuficientes: se descartaron "
+                    + discarded + " simbolo(s) intermedios. "
+                    + "La ultima sala recibe el simbolo final de la cadena.", this);
+
+                var lastSymbol = symbols[symbols.Count - 1];
+                assignments.Add(new MissionRoomAssignment(
+                    visited[i],
+                    lastSymbol,
+                    MissionSymbolInfo.ToChar(lastSymbol)
+                ));
+                break;
+            }
 
             assignments.Add(new MissionRoomAssignment(
-                room,
+                visited[i],
                 symbols[i],
                 MissionSymbolInfo.ToChar(symbols[i])
             ));

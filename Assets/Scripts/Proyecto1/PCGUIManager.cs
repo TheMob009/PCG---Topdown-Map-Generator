@@ -154,6 +154,10 @@ public class PCGUIManager : MonoBehaviour
             if (panel != null)
             {
                 panel.SetActive(!panel.activeSelf);
+                if (panel.activeSelf)
+                {
+                    PopulateUIFromGenerators();
+                }
             }
         }
     }
