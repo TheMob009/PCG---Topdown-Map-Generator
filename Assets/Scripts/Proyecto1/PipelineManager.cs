@@ -35,6 +35,35 @@ public class PipelineManager : MonoBehaviour
     public int MapWidth => mapWidth;
     public int MapHeight => mapHeight;
 
+    /// <summary>
+    /// Permite configurar las dimensiones desde la UI.
+    /// </summary>
+    public void SetDimensions(int width, int height)
+    {
+        mapWidth = width;
+        mapHeight = height;
+    }
+
+    /// <summary>
+    /// Propaga una seed maestra a todos los generadores, derivando sub-seeds
+    /// deterministas para que cada algoritmo genere resultados distintos pero
+    /// reproducibles con la misma seed.
+    /// </summary>
+    public void SetGlobalSeed(int masterSeed)
+    {
+        var masterRng = new System.Random(masterSeed);
+        if (perlinGenerator != null) perlinGenerator.SetSeed(masterRng.Next());
+        if (bspGenerator != null) bspGenerator.SetSeed(masterRng.Next());
+        if (randomWalkGenerator != null) randomWalkGenerator.SetSeed(masterRng.Next());
+        if (missionGrammarGenerator != null) missionGrammarGenerator.SetSeed(masterRng.Next());
+    }
+
+    // Getters para que la UI pueda acceder a los generadores
+    public PerlinMapGenerator PerlinGenerator => perlinGenerator;
+    public BspMapGenerator BspGenerator => bspGenerator;
+    public RandomWalkGenerator RWGenerator => randomWalkGenerator;
+    public MissionGrammarGenerator MGGenerator => missionGrammarGenerator;
+
     private void Start()
     {
         if (generateOnStart)

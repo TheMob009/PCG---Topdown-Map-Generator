@@ -2,19 +2,19 @@ using UnityEngine;
 
 /// <summary>
 /// Primera etapa conceptual del pipeline (aunque se ejecute como script
-/// independiente): genera un mapa de ruido Perlin del mismo tamaÒo que el
+/// independiente): genera un mapa de ruido Perlin del mismo tama√±o que el
 /// grid del BSP (width x height), usado como capa de datos ambiental.
 ///
-/// Los valores NO representan altura fÌsica. Indican caracterÌsticas del
-/// terreno: en la mina, zonas con valores altos pueden tener m·s presencia
-/// de minerales; en la colonia, m·s presencia de cristales o condiciones
+/// Los valores NO representan altura f√≠sica. Indican caracter√≠sticas del
+/// terreno: en la mina, zonas con valores altos pueden tener m√°s presencia
+/// de minerales; en la colonia, m√°s presencia de cristales o condiciones
 /// ambientales particulares. El BSP y el L-System consultan este mapa para
-/// decidir dÛnde ubicar contenido.
+/// decidir d√≥nde ubicar contenido.
 ///
 /// Reutiliza el algoritmo de Perlin/Gradient Noise 2D implementado en el
 /// laboratorio (PerlinNoiseGenerator + HeightmapGenerator), sin modificarlos.
 /// Esos scripts generan mapas cuadrados (resolution x resolution) pensados
-/// para un Terrain; aquÌ se llama directamente a GetNoiseValue() celda por
+/// para un Terrain; aqu√≠ se llama directamente a GetNoiseValue() celda por
 /// celda para poder soportar un grid rectangular (width x height) igual al
 /// del BSP.
 /// </summary>
@@ -24,12 +24,12 @@ public class PerlinMapGenerator : MonoBehaviour
     [SerializeField] private int width = 60;
     [SerializeField] private int height = 40;
 
-    [Header("Par·metros de ruido (laboratorio de terrenos)")]
-    [Tooltip("Cantidad de variaciones del ruido distribuidas sobre el mapa. Valores mayores producen caracterÌsticas m·s pequeÒas y frecuentes.")]
+    [Header("Par√°metros de ruido (laboratorio de terrenos)")]
+    [Tooltip("Cantidad de variaciones del ruido distribuidas sobre el mapa. Valores mayores producen caracter√≠sticas m√°s peque√±as y frecuentes.")]
     [Range(0.1f, 20f)]
     [SerializeField] private float frequency = 4f;
 
-    [Tooltip("MÈtodo utilizado para combinar las contribuciones de los gradientes vecinos.")]
+    [Tooltip("M√©todo utilizado para combinar las contribuciones de los gradientes vecinos.")]
     [SerializeField]
     private HeightmapGenerator.InterpolationMode interpolationMode =
         HeightmapGenerator.InterpolationMode.Bicubic;
@@ -39,13 +39,13 @@ public class PerlinMapGenerator : MonoBehaviour
     [SerializeField] private int seed = 12345;
 
     [Header("Debug")]
-    [Tooltip("El gizmo de Perlin pinta un mosaico sÛlido que puede tapar visualmente al BSP y al Random Walk (que ocupan el mismo espacio). Desactiva esto para inspeccionar la estructura del mapa sin la capa de ruido encima.")]
+    [Tooltip("El gizmo de Perlin pinta un mosaico s√≥lido que puede tapar visualmente al BSP y al Random Walk (que ocupan el mismo espacio). Desactiva esto para inspeccionar la estructura del mapa sin la capa de ruido encima.")]
     [SerializeField] private bool showGizmo = true;
 
     /// <summary>
     /// Mapa de ruido normalizado a [0,1], mismo sistema de coordenadas
     /// [x, y] que BspMapResult.Grid (a diferencia del heightmap original
-    /// del laboratorio, que usa [y, x] por convenciÛn de Terrain).
+    /// del laboratorio, que usa [y, x] por convenci√≥n de Terrain).
     /// </summary>
     public float[,] NoiseMap { get; private set; }
 
@@ -53,7 +53,7 @@ public class PerlinMapGenerator : MonoBehaviour
     public int Height => height;
 
     /// <summary>
-    /// Permite que el PipelineManager sincronice el tamaÒo con el del BSP.
+    /// Permite que el PipelineManager sincronice el tama√±o con el del BSP.
     /// </summary>
     public void SetDimensions(int newWidth, int newHeight)
     {
@@ -62,8 +62,20 @@ public class PerlinMapGenerator : MonoBehaviour
     }
 
     /// <summary>
+    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
+    /// </summary>
+    public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
+    public void SetFrequency(float value) { frequency = value; }
+    public void SetInterpolationMode(HeightmapGenerator.InterpolationMode mode) { interpolationMode = mode; }
+
+    // Getters para inicializar la UI con los valores actuales
+    public int Seed => seed;
+    public float GetFrequency() => frequency;
+    public HeightmapGenerator.InterpolationMode GetInterpolationMode() => interpolationMode;
+
+    /// <summary>
     /// Genera el mapa de ruido. Independiente del BSP: solo depende del
-    /// tamaÒo configurado, por lo que puede ejecutarse antes que el BSP
+    /// tama√±o configurado, por lo que puede ejecutarse antes que el BSP
     /// (como indica el flujo del plan: SEED -> PERLIN -> BSP -> ...).
     /// </summary>
     public float[,] Generate()
@@ -79,9 +91,9 @@ public class PerlinMapGenerator : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                // Cada eje se normaliza con su propia dimensiÛn, para que
+                // Cada eje se normaliza con su propia dimensi√≥n, para que
                 // frequency represente la misma escala de detalle en X y en Y
-                // sin importar si el mapa es m·s ancho que alto.
+                // sin importar si el mapa es m√°s ancho que alto.
                 float normalizedX = width > 1 ? x / (float)(width - 1) : 0f;
                 float normalizedY = height > 1 ? y / (float)(height - 1) : 0f;
 
@@ -105,8 +117,8 @@ public class PerlinMapGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Valor de ruido en una celda del grid. Devuelve 0 si est· fuera de rango
-    /// o si el mapa todavÌa no se ha generado.
+    /// Valor de ruido en una celda del grid. Devuelve 0 si est√° fuera de rango
+    /// o si el mapa todav√≠a no se ha generado.
     /// </summary>
     public float GetValueAt(int x, int y)
     {
@@ -116,8 +128,8 @@ public class PerlinMapGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Promedio del ruido dentro de los lÌmites de una sala del BSP. Pensado
-    /// para que el L-System pueda elegir salas con mayor concentraciÛn de
+    /// Promedio del ruido dentro de los l√≠mites de una sala del BSP. Pensado
+    /// para que el L-System pueda elegir salas con mayor concentraci√≥n de
     /// "mineral" o "cristal" como puntos de origen de las vetas.
     /// </summary>
     public float GetAverageValueInRoom(BspRoom room)
@@ -144,19 +156,19 @@ public class PerlinMapGenerator : MonoBehaviour
     // Debug visual en el editor: pinta el mapa de ruido como escala de grises
     // ---------------------------------------------------------------------
     //
-    // Nota: Gizmos.DrawCube en 3D se ve afectado por el ·ngulo de c·mara y
+    // Nota: Gizmos.DrawCube en 3D se ve afectado por el √°ngulo de c√°mara y
     // el sombreado de la Scene view, lo que puede hacer que valores de gris
-    // intermedios (tÌpicos de Perlin, que rara vez toca 0 o 1) se vean casi
-    // uniformes. Por eso aquÌ se remapea el contraste antes de pintar, y se
+    // intermedios (t√≠picos de Perlin, que rara vez toca 0 o 1) se vean casi
+    // uniformes. Por eso aqu√≠ se remapea el contraste antes de pintar, y se
     // recomienda mirar el mapa desde arriba (vista Top) para evitar
-    // distorsiÛn por perspectiva.
+    // distorsi√≥n por perspectiva.
     private void OnDrawGizmos()
     {
         if (NoiseMap == null || !showGizmo) return;
 
         // Encuentra el rango real de valores para estirar el contraste.
-        // Gradient Noise casi nunca toca 0 o 1, asÌ que sin este paso el
-        // mapa se ve plano aunque los datos varÌen correctamente.
+        // Gradient Noise casi nunca toca 0 o 1, as√≠ que sin este paso el
+        // mapa se ve plano aunque los datos var√≠en correctamente.
         float min = float.MaxValue, max = float.MinValue;
         for (int x = 0; x < width; x++)
         {
@@ -176,7 +188,7 @@ public class PerlinMapGenerator : MonoBehaviour
                 float v = NoiseMap[x, y];
                 float contrasted = (v - min) / range; // ahora ocupa todo [0,1]
 
-                // Z = -0.5: se dibuja "detr·s" del plano donde el BSP y el
+                // Z = -0.5: se dibuja "detr√°s" del plano donde el BSP y el
                 // Random Walk pintan sus propios gizmos (Z = 0), para que
                 // ambas capas puedan inspeccionarse sin que una tape a la otra.
                 Gizmos.color = new Color(contrasted, contrasted, contrasted, 1f);

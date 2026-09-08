@@ -90,6 +90,26 @@ public class BspMapGenerator : MonoBehaviour
     }
 
     /// <summary>
+    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
+    /// </summary>
+    public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
+    public void SetMinPartitionSize(int value) { minPartitionSize = value; }
+    public void SetMaxIterations(int value) { maxIterations = value; }
+    public void SetRoomPadding(int value) { roomPadding = value; }
+    public void SetMinRoomSize(int value) { minRoomSize = value; }
+    public void SetCorridorWidth(int value) { corridorWidth = value; }
+
+    // Getters para inicializar la UI con los valores actuales
+    public int Seed => seed;
+    public int MapWidthValue => mapWidth;
+    public int MapHeightValue => mapHeight;
+    public int GetMinPartitionSize() => minPartitionSize;
+    public int GetMaxIterations() => maxIterations;
+    public int GetRoomPadding() => roomPadding;
+    public int GetMinRoomSize() => minRoomSize;
+    public int GetCorridorWidth() => corridorWidth;
+
+    /// <summary>
     /// Valor ambiental (Perlin) promedio de una sala, si hay un
     /// PerlinMapGenerator asignado y ya gener su mapa. Devuelve 0 si no hay
     /// datos disponibles, para que llamarlo sea siempre seguro.

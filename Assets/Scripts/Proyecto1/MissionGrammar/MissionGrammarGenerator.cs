@@ -92,6 +92,28 @@ public class MissionGrammarGenerator : MonoBehaviour
     /// <summary>Derivación completa (historial de expansiones).</summary>
     public List<string> Derivation { get; private set; }
 
+    // -----------------------------------------------------------------
+    // Setters / Getters para la UI
+    // -----------------------------------------------------------------
+
+    /// <summary>
+    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
+    /// </summary>
+    public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
+    public void SetStartSymbol(string value) { startSymbol = value; }
+    public void SetTaskSymbol(string value) { taskSymbol = value; }
+    public void SetStartProduction(string value) { startProduction = value; }
+    public void SetExpansionSteps(int value) { expansionSteps = value; }
+    public void SetMissionContext(MissionContext ctx) { missionContext = ctx; }
+
+    // Getters para inicializar la UI con los valores actuales
+    public int Seed => seed;
+    public string GetStartSymbol() => startSymbol;
+    public string GetTaskSymbol() => taskSymbol;
+    public string GetStartProduction() => startProduction;
+    public int GetExpansionSteps() => expansionSteps;
+    public MissionContext GetMissionContext() => missionContext;
+
     // =====================================================================
     // GENERACIÓN
     // =====================================================================

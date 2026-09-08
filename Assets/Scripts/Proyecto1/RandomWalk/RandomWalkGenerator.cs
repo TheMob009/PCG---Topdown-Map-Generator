@@ -67,6 +67,20 @@ public class RandomWalkGenerator : MonoBehaviour
     private readonly HashSet<Vector2Int> _carvedByWalk = new HashSet<Vector2Int>();
 
     /// <summary>
+    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
+    /// </summary>
+    public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
+    public void SetAgentCount(int value) { agentCount = value; }
+    public void SetStepsPerAgent(int value) { stepsPerAgent = value; }
+    public void SetWalkWidth(int value) { walkWidth = value; }
+
+    // Getters para inicializar la UI con los valores actuales
+    public int Seed => seed;
+    public int GetAgentCount() => agentCount;
+    public int GetStepsPerAgent() => stepsPerAgent;
+    public int GetWalkWidth() => walkWidth;
+
+    /// <summary>
     /// Ejecuta el Random Walk sobre el grid ya generado por el BSP.
     /// </summary>
     public void Generate()
