@@ -35,6 +35,10 @@ public class BspMapGenerator : MonoBehaviour
     [Header("Pasillos")]
     [SerializeField] private int corridorWidth = 1;
 
+    [Header("Tipo de corredor")]
+    [Tooltip("Si es true, los corredores son rectos (horizontal O vertical). Si es false, son en forma de L (estilo caverna).")]
+    [SerializeField] private bool useStraightCorridors = false;
+
     [Header("Semilla")]
     [SerializeField] private bool useRandomSeed = true;
     [SerializeField] private int seed = 0;
@@ -88,6 +92,7 @@ public class BspMapGenerator : MonoBehaviour
     public void SetRoomPadding(int value) { roomPadding = value; }
     public void SetMinRoomSize(int value) { minRoomSize = value; }
     public void SetCorridorWidth(int value) { corridorWidth = value; }
+    public void SetUseStraightCorridors(bool value) { useStraightCorridors = value; }
 
     // Getters para inicializar la UI con los valores actuales
     public int Seed => seed;
@@ -98,6 +103,7 @@ public class BspMapGenerator : MonoBehaviour
     public int GetRoomPadding() => roomPadding;
     public int GetMinRoomSize() => minRoomSize;
     public int GetCorridorWidth() => corridorWidth;
+    public bool GetUseStraightCorridors() => useStraightCorridors;
 
     /// <summary>
     /// Valor ambiental (Perlin) promedio de una sala, si hay un
@@ -227,7 +233,10 @@ public class BspMapGenerator : MonoBehaviour
 
         if (leftRoom != null && rightRoom != null)
         {
-            CarveCorridor(leftRoom.Center, rightRoom.Center);
+            if (useStraightCorridors)
+                CarveCorridorStraight(node, leftRoom, rightRoom);
+            else
+                CarveCorridor(leftRoom.Center, rightRoom.Center);
         }
 
         // Sube una sala representativa hacia el nivel superior del �rbol.
@@ -250,6 +259,29 @@ public class BspMapGenerator : MonoBehaviour
         {
             CarveVertical(from.y, to.y, from.x);
             CarveHorizontal(from.x, to.x, to.y);
+        }
+    }
+
+    /// <summary>
+    /// Excava un corredor RECTO entre dos salas usando la direccion de
+    /// particion del nodo padre (SplitHorizontal):
+    ///   true  = salas arriba/abajo = corredor vertical en X promedio.
+    ///   false = salas izq/der      = corredor horizontal en Y promedio.
+    /// </summary>
+    private void CarveCorridorStraight(BspNode parentNode, BspRoom roomA, BspRoom roomB)
+    {
+        Vector2Int a = roomA.Center;
+        Vector2Int b = roomB.Center;
+
+        if (parentNode.SplitHorizontal)
+        {
+            int midX = Mathf.Clamp((a.x + b.x) / 2, 0, Result.Width - 1);
+            CarveVertical(a.y, b.y, midX);
+        }
+        else
+        {
+            int midY = Mathf.Clamp((a.y + b.y) / 2, 0, Result.Height - 1);
+            CarveHorizontal(a.x, b.x, midY);
         }
     }
 

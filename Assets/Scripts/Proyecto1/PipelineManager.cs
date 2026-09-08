@@ -115,6 +115,7 @@ public class PipelineManager : MonoBehaviour
             bspGenerator.SetRoomPadding(3);
             bspGenerator.SetMinRoomSize(8);
             bspGenerator.SetCorridorWidth(1);
+            bspGenerator.SetUseStraightCorridors(false);
         }
 
         if (randomWalkGenerator != null)
@@ -129,6 +130,11 @@ public class PipelineManager : MonoBehaviour
             missionGrammarGenerator.SetMissionContext(MissionContext.Mina);
             missionGrammarGenerator.SetExpansionSteps(2);
         }
+
+        if (mapVisualizer != null)
+        {
+            mapVisualizer.SetRenderEmptyAsRock(false);
+        }
     }
 
     /// <summary>
@@ -139,6 +145,62 @@ public class PipelineManager : MonoBehaviour
     public void GenerateAllExcavatedCave()
     {
         ApplyExcavatedCaveParameters();
+
+        int randomMasterSeed = System.Environment.TickCount ^ System.Guid.NewGuid().GetHashCode();
+        SetGlobalSeed(randomMasterSeed);
+
+        GenerateAll();
+    }
+
+    /// <summary>
+    /// Sobrescribe los parametros de todos los generadores con la configuracion
+    /// optima para "Estacion Espacial": modulos grandes y separados, corredores
+    /// rectos anchos y ductos de ventilacion angostos (Random Walk).
+    /// Las celdas vacias se rellenan con roca lunar.
+    /// </summary>
+    public void ApplyLunarStationParameters()
+    {
+        SetDimensions(80, 60);
+        SyncDimensions();
+
+        if (perlinGenerator != null)
+        {
+            perlinGenerator.SetFrequency(6.0f);
+            perlinGenerator.SetInterpolationMode(HeightmapGenerator.InterpolationMode.Bicubic);
+            perlinGenerator.SetThreshold(0.55f);
+        }
+
+        if (bspGenerator != null)
+        {
+            bspGenerator.SetMinPartitionSize(20);
+            bspGenerator.SetMaxIterations(3);
+            bspGenerator.SetRoomPadding(6);
+            bspGenerator.SetMinRoomSize(10);
+            bspGenerator.SetCorridorWidth(3);
+            bspGenerator.SetUseStraightCorridors(true);
+        }
+
+        if (randomWalkGenerator != null)
+        {
+            randomWalkGenerator.SetAgentCount(3);
+            randomWalkGenerator.SetStepsPerAgent(80);
+            randomWalkGenerator.SetWalkWidth(1);
+        }
+
+        if (mapVisualizer != null)
+        {
+            mapVisualizer.SetRenderEmptyAsRock(true);
+        }
+    }
+
+    /// <summary>
+    /// Aplica los parametros de "Estacion Espacial", genera una nueva semilla
+    /// aleatoria y ejecuta todo el pipeline en orden.
+    /// </summary>
+    [ContextMenu("Generar Todo: Estacion Espacial")]
+    public void GenerateAllLunarStation()
+    {
+        ApplyLunarStationParameters();
 
         int randomMasterSeed = System.Environment.TickCount ^ System.Guid.NewGuid().GetHashCode();
         SetGlobalSeed(randomMasterSeed);

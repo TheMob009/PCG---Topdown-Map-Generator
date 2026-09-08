@@ -45,6 +45,13 @@ public class MapVisualizer : MonoBehaviour
     [Header("Pared (sin diferenciación por ruido)")]
     [SerializeField] private TileBase wallTile;
 
+    [Header("Roca lunar (celdas vacias)")]
+    [Tooltip("Tile para celdas Empty (roca lunar). Solo se usa si renderEmptyAsRock esta activo. Si no se asigna, las celdas vacias quedan sin tile.")]
+    [SerializeField] private TileBase lunarRockTile;
+
+    [Tooltip("Si es true, las celdas Empty se pintan con lunarRockTile. False = comportamiento original (vacias).")]
+    [SerializeField] private bool renderEmptyAsRock = false;
+
     // =================================================================
     // Tiles — Set A (ruido bajo, < threshold)
     // =================================================================
@@ -151,6 +158,8 @@ public class MapVisualizer : MonoBehaviour
 
     public Tilemap FloorTilemap => floorTilemap;
     public Tilemap WallTilemap => wallTilemap;
+    public void SetRenderEmptyAsRock(bool value) { renderEmptyAsRock = value; }
+    public bool GetRenderEmptyAsRock() => renderEmptyAsRock;
 
     // =================================================================
     // Renderizado interno
@@ -174,9 +183,14 @@ public class MapVisualizer : MonoBehaviour
             for (int y = 0; y < _snapshotHeight; y++)
             {
                 var cellType = _bspGridSnapshot[x, y];
-                if (cellType == CellType.Empty) continue;
-
                 var pos = new Vector3Int(x, y, 0);
+                if (cellType == CellType.Empty)
+                {
+                    if (renderEmptyAsRock && lunarRockTile != null)
+                        SetFloorTile(pos, lunarRockTile);
+                    continue;
+                }
+
 
                 if (cellType == CellType.Floor)
                 {
@@ -219,9 +233,14 @@ public class MapVisualizer : MonoBehaviour
             for (int y = 0; y < result.Height; y++)
             {
                 var cellType = result.Grid[x, y];
-                if (cellType == CellType.Empty) continue;
-
                 var pos = new Vector3Int(x, y, 0);
+                if (cellType == CellType.Empty)
+                {
+                    if (renderEmptyAsRock && lunarRockTile != null)
+                        SetFloorTile(pos, lunarRockTile);
+                    continue;
+                }
+
 
                 if (cellType == CellType.Wall)
                 {

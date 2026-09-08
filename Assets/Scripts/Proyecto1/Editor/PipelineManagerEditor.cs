@@ -41,6 +41,13 @@ public class PipelineManagerEditor : Editor
         }
         GUI.backgroundColor = prevBg;
 
+        GUI.backgroundColor = new Color(0.85f, 0.85f, 1f);
+        if (GUILayout.Button("Generar Todo: Estacion Espacial", GUILayout.Height(35)))
+        {
+            RunAction(pipeline, "Generar Todo: Estacion Espacial", pipeline.GenerateAllLunarStation);
+        }
+        GUI.backgroundColor = prevBg;
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Etapas individuales", EditorStyles.boldLabel);
 

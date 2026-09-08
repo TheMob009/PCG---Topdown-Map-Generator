@@ -13,6 +13,14 @@ public class BspNode
     public BspNode Right;
     public BspRoom Room;         // solo asignado si este nodo es hoja
 
+    /// <summary>
+    /// Direccion en la que se particiono este nodo.
+    /// true  = corte horizontal (Left arriba, Right abajo).
+    /// false = corte vertical   (Left izquierda, Right derecha).
+    /// Solo tiene sentido en nodos internos (IsLeaf == false).
+    /// </summary>
+    public bool SplitHorizontal { get; private set; }
+
     public bool IsLeaf => Left == null && Right == null;
 
     public BspNode(RectInt area)
@@ -41,6 +49,7 @@ public class BspNode
         if (max <= minSize) return false; // no cabe una división válida
 
         int split = rng.Next(minSize, max);
+        SplitHorizontal = splitHorizontal;
 
         if (splitHorizontal)
         {
