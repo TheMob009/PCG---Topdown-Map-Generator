@@ -27,6 +27,7 @@ public class PipelineManager : MonoBehaviour
     [SerializeField] private RandomWalkGenerator randomWalkGenerator;
     [SerializeField] private MissionGrammarGenerator missionGrammarGenerator;
     [SerializeField] private MissionVisualizer missionVisualizer;
+    [SerializeField] private MapVisualizer mapVisualizer;
 
     [Header("Ejecucion")]
     [Tooltip("Si esta activo, genera el mapa completo con sus misiones al iniciar el juego en Play Mode.")]
@@ -63,6 +64,7 @@ public class PipelineManager : MonoBehaviour
     public BspMapGenerator BspGenerator => bspGenerator;
     public RandomWalkGenerator RWGenerator => randomWalkGenerator;
     public MissionGrammarGenerator MGGenerator => missionGrammarGenerator;
+    public MapVisualizer MapVisualizer => mapVisualizer;
 
     private void Start()
     {
@@ -86,6 +88,7 @@ public class PipelineManager : MonoBehaviour
         GenerateRandomWalkOnly();
         GenerateMissionGrammarOnly();
         RenderMissionVisualizer();
+        RenderMap(MapRenderStage.Full);
     }
 
     /// <summary>
@@ -118,6 +121,10 @@ public class PipelineManager : MonoBehaviour
         }
 
         bspGenerator.Generate();
+
+        // Snapshot del grid BSP antes de que RandomWalk lo modifique,
+        // para que MapVisualizer pueda renderizar "solo BSP" más adelante.
+        if (mapVisualizer != null) mapVisualizer.SnapshotBSPGrid();
     }
 
     public void GenerateRandomWalkOnly()
@@ -164,6 +171,17 @@ public class PipelineManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Renderiza el mapa en los tilemaps con la etapa indicada.
+    /// </summary>
+    public void RenderMap(MapRenderStage stage)
+    {
+        if (mapVisualizer != null)
+        {
+            mapVisualizer.Render(stage);
+        }
+    }
+
+    /// <summary>
     /// Limpia los tilemaps del BSP y los marcadores de mision.
     /// </summary>
     public void ClearAll()
@@ -171,6 +189,10 @@ public class PipelineManager : MonoBehaviour
         if (bspGenerator != null)
         {
             bspGenerator.ClearMap();
+        }
+        if (mapVisualizer != null)
+        {
+            mapVisualizer.Clear();
         }
         if (missionVisualizer != null)
         {

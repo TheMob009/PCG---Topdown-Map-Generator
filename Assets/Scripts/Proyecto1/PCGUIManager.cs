@@ -84,6 +84,8 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private Slider sliderFrequency;
     [SerializeField] private TMP_Text lblFrecuency;
     [SerializeField] private TMP_Dropdown dropdownInterpolation;
+    [SerializeField] private Slider sliderThreshold;
+    [SerializeField] private TMP_Text lblThreshold;
     [SerializeField] private Button btnGenerarPerlin;
 
     // =================================================================
@@ -127,6 +129,7 @@ public class PCGUIManager : MonoBehaviour
 
         // Registrar listeners de sliders para actualizar labels
         if (sliderFrequency != null) sliderFrequency.onValueChanged.AddListener(OnFrequencySliderChanged);
+        if (sliderThreshold != null) sliderThreshold.onValueChanged.AddListener(OnThresholdSliderChanged);
         if (sliderExpansionSteps != null) sliderExpansionSteps.onValueChanged.AddListener(OnExpansionStepsSliderChanged);
 
         // Hacer los campos de dimensiones de Perlin no editables (sync desde BSP)
@@ -210,6 +213,13 @@ public class PCGUIManager : MonoBehaviour
             if (dropdownInterpolation != null)
             {
                 dropdownInterpolation.value = (int)perlin.GetInterpolationMode();
+            }
+
+            // Slider de threshold
+            if (sliderThreshold != null)
+            {
+                sliderThreshold.value = perlin.GetThreshold();
+                UpdateThresholdLabel(perlin.GetThreshold());
             }
         }
 
@@ -329,6 +339,8 @@ public class PCGUIManager : MonoBehaviour
 
         if (sliderFrequency != null) perlin.SetFrequency(sliderFrequency.value);
 
+        if (sliderThreshold != null) perlin.SetThreshold(sliderThreshold.value);
+
         if (dropdownInterpolation != null)
         {
             perlin.SetInterpolationMode(
@@ -379,6 +391,7 @@ public class PCGUIManager : MonoBehaviour
 
         pipelineManager.SetGlobalSeed(seed);
         pipelineManager.GenerateAll();
+        // GenerateAll ya incluye RenderMap(Full)
     }
 
     /// <summary>
@@ -399,6 +412,7 @@ public class PCGUIManager : MonoBehaviour
         }
 
         pipelineManager.GenerateBspOnly();
+        pipelineManager.RenderMap(MapRenderStage.BSPOnly);
     }
 
     /// <summary>
@@ -420,6 +434,7 @@ public class PCGUIManager : MonoBehaviour
         }
 
         pipelineManager.GenerateRandomWalkOnly();
+        pipelineManager.RenderMap(MapRenderStage.WithRandomWalk);
     }
 
     /// <summary>
@@ -473,6 +488,11 @@ public class PCGUIManager : MonoBehaviour
         UpdateFrequencyLabel(value);
     }
 
+    private void OnThresholdSliderChanged(float value)
+    {
+        UpdateThresholdLabel(value);
+    }
+
     private void OnExpansionStepsSliderChanged(float value)
     {
         UpdateExpansionStepsLabel(Mathf.RoundToInt(value));
@@ -498,6 +518,12 @@ public class PCGUIManager : MonoBehaviour
     {
         if (lblFrecuency != null)
             lblFrecuency.text = "Frecuencia: " + value.ToString("F1");
+    }
+
+    private void UpdateThresholdLabel(float value)
+    {
+        if (lblThreshold != null)
+            lblThreshold.text = "Threshold: " + value.ToString("F2");
     }
 
     private void UpdateExpansionStepsLabel(int value)

@@ -42,12 +42,27 @@ public class PerlinMapGenerator : MonoBehaviour
     [Tooltip("El gizmo de Perlin pinta un mosaico sólido que puede tapar visualmente al BSP y al Random Walk (que ocupan el mismo espacio). Desactiva esto para inspeccionar la estructura del mapa sin la capa de ruido encima.")]
     [SerializeField] private bool showGizmo = true;
 
+    [Header("Threshold de visualización")]
+    [Tooltip("Valor de corte para la visualización con tiles: ruido < threshold → Set A, ruido >= threshold → Set B.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float threshold = 0.5f;
+
     /// <summary>
     /// Mapa de ruido normalizado a [0,1], mismo sistema de coordenadas
     /// [x, y] que BspMapResult.Grid (a diferencia del heightmap original
     /// del laboratorio, que usa [y, x] por convención de Terrain).
     /// </summary>
     public float[,] NoiseMap { get; private set; }
+
+    /// <summary>
+    /// Valor mínimo encontrado en el NoiseMap tras la última generación.
+    /// </summary>
+    public float NoiseMin { get; private set; }
+
+    /// <summary>
+    /// Valor máximo encontrado en el NoiseMap tras la última generación.
+    /// </summary>
+    public float NoiseMax { get; private set; }
 
     public int Width => width;
     public int Height => height;
@@ -72,6 +87,11 @@ public class PerlinMapGenerator : MonoBehaviour
     public int Seed => seed;
     public float GetFrequency() => frequency;
     public HeightmapGenerator.InterpolationMode GetInterpolationMode() => interpolationMode;
+
+    // Threshold
+    public float Threshold => threshold;
+    public void SetThreshold(float value) { threshold = Mathf.Clamp01(value); }
+    public float GetThreshold() => threshold;
 
     /// <summary>
     /// Genera el mapa de ruido. Independiente del BSP: solo depende del
@@ -113,6 +133,21 @@ public class PerlinMapGenerator : MonoBehaviour
             }
         }
 
+        // Cachear el rango real para que tanto el Gizmo como el
+        // MapVisualizer normalicen con la misma escala.
+        float min = float.MaxValue, max = float.MinValue;
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float v = NoiseMap[x, y];
+                if (v < min) min = v;
+                if (v > max) max = v;
+            }
+        }
+        NoiseMin = min;
+        NoiseMax = max;
+
         return NoiseMap;
     }
 
@@ -125,6 +160,20 @@ public class PerlinMapGenerator : MonoBehaviour
         if (NoiseMap == null) return 0f;
         if (x < 0 || y < 0 || x >= width || y >= height) return 0f;
         return NoiseMap[x, y];
+    }
+
+    /// <summary>
+    /// Valor de ruido normalizado al rango real [NoiseMin, NoiseMax] → [0,1].
+    /// Coincide exactamente con la escala de grises del Gizmo.
+    /// Devuelve 0 si el mapa no se ha generado o la celda está fuera de rango.
+    /// </summary>
+    public float GetNormalizedValueAt(int x, int y)
+    {
+        if (NoiseMap == null) return 0f;
+        if (x < 0 || y < 0 || x >= width || y >= height) return 0f;
+
+        float range = Mathf.Max(0.0001f, NoiseMax - NoiseMin);
+        return (NoiseMap[x, y] - NoiseMin) / range;
     }
 
     /// <summary>
@@ -166,27 +215,13 @@ public class PerlinMapGenerator : MonoBehaviour
     {
         if (NoiseMap == null || !showGizmo) return;
 
-        // Encuentra el rango real de valores para estirar el contraste.
-        // Gradient Noise casi nunca toca 0 o 1, así que sin este paso el
-        // mapa se ve plano aunque los datos varíen correctamente.
-        float min = float.MaxValue, max = float.MinValue;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                float v = NoiseMap[x, y];
-                if (v < min) min = v;
-                if (v > max) max = v;
-            }
-        }
-        float range = Mathf.Max(0.0001f, max - min);
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                float v = NoiseMap[x, y];
-                float contrasted = (v - min) / range; // ahora ocupa todo [0,1]
+                // Usa la misma normalización que MapVisualizer para
+                // que el Gizmo y los tiles coincidan visualmente.
+                float contrasted = GetNormalizedValueAt(x, y);
 
                 // Z = -0.5: se dibuja "detrás" del plano donde el BSP y el
                 // Random Walk pintan sus propios gizmos (Z = 0), para que

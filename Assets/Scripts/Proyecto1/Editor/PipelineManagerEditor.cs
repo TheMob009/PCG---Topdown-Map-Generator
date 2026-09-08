@@ -52,12 +52,17 @@ public class PipelineManagerEditor : Editor
                 {
                     pipeline.SyncDimensions();
                     pipeline.GenerateBspOnly();
+                    pipeline.RenderMap(MapRenderStage.BSPOnly);
                 });
             }
 
             if (GUILayout.Button("3. Random Walk", GUILayout.Height(25)))
             {
-                RunAction(pipeline, "Generar Random Walk", pipeline.GenerateRandomWalkOnly);
+                RunAction(pipeline, "Generar Random Walk", () =>
+                {
+                    pipeline.GenerateRandomWalkOnly();
+                    pipeline.RenderMap(MapRenderStage.WithRandomWalk);
+                });
             }
 
             if (GUILayout.Button("4. Mision", GUILayout.Height(25)))
@@ -67,7 +72,11 @@ public class PipelineManagerEditor : Editor
 
             if (GUILayout.Button("5. Visualizar", GUILayout.Height(25)))
             {
-                RunAction(pipeline, "Visualizar Marcadores", pipeline.RenderMissionVisualizer);
+                RunAction(pipeline, "Visualizar", () =>
+                {
+                    pipeline.RenderMap(MapRenderStage.Full);
+                    pipeline.RenderMissionVisualizer();
+                });
             }
         }
 

@@ -113,53 +113,62 @@ public static class TopdownSceneSetup
             }
         }
 
-        // 5. Enlazar Tilemaps en BspMapGenerator
+        // 5. Buscar o crear MapVisualizer (renderizador centralizado del mapa)
+        MapVisualizer mapVisualizer = Object.FindFirstObjectByType<MapVisualizer>();
         BspMapGenerator bspGen = Object.FindFirstObjectByType<BspMapGenerator>();
-        if (bspGen != null)
-        {
-            SerializedObject soBsp = new SerializedObject(bspGen);
-            soBsp.Update();
-
-            SerializedProperty pFloor = soBsp.FindProperty("floorTilemap");
-            SerializedProperty pWall = soBsp.FindProperty("wallTilemap");
-            if (pFloor != null) pFloor.objectReferenceValue = floorTilemap;
-            if (pWall != null) pWall.objectReferenceValue = wallTilemap;
-
-            soBsp.ApplyModifiedProperties();
-            EditorUtility.SetDirty(bspGen);
-        }
-
-        // 6. Enlazar Tilemaps en RandomWalkGenerator
         RandomWalkGenerator rwGen = Object.FindFirstObjectByType<RandomWalkGenerator>();
-        if (rwGen != null)
-        {
-            SerializedObject soRw = new SerializedObject(rwGen);
-            soRw.Update();
+        PerlinMapGenerator perlinGen = Object.FindFirstObjectByType<PerlinMapGenerator>();
 
-            SerializedProperty pFloor = soRw.FindProperty("floorTilemap");
-            SerializedProperty pWall = soRw.FindProperty("wallTilemap");
+        if (mapVisualizer == null)
+        {
+            // Crear en el mismo GameObject que el PipelineManager si existe,
+            // o en uno nuevo si no.
+            PipelineManager pipeline = Object.FindFirstObjectByType<PipelineManager>();
+            GameObject host = pipeline != null ? pipeline.gameObject : new GameObject("MapVisualizer");
+            if (pipeline == null) Undo.RegisterCreatedObjectUndo(host, "Crear MapVisualizer");
+            mapVisualizer = Undo.AddComponent<MapVisualizer>(host);
+        }
+
+        // Enlazar tilemaps y generadores en MapVisualizer
+        if (mapVisualizer != null)
+        {
+            SerializedObject soMap = new SerializedObject(mapVisualizer);
+            soMap.Update();
+
+            SerializedProperty pFloor = soMap.FindProperty("floorTilemap");
+            SerializedProperty pWall = soMap.FindProperty("wallTilemap");
             if (pFloor != null) pFloor.objectReferenceValue = floorTilemap;
             if (pWall != null) pWall.objectReferenceValue = wallTilemap;
 
-            soRw.ApplyModifiedProperties();
-            EditorUtility.SetDirty(rwGen);
+            SerializedProperty pBsp = soMap.FindProperty("bspGenerator");
+            SerializedProperty pRw = soMap.FindProperty("randomWalkGenerator");
+            SerializedProperty pPerlin = soMap.FindProperty("perlinGenerator");
+            if (pBsp != null && bspGen != null) pBsp.objectReferenceValue = bspGen;
+            if (pRw != null && rwGen != null) pRw.objectReferenceValue = rwGen;
+            if (pPerlin != null && perlinGen != null) pPerlin.objectReferenceValue = perlinGen;
+
+            soMap.ApplyModifiedProperties();
+            EditorUtility.SetDirty(mapVisualizer);
         }
 
-        // 7. Enlazar MissionVisualizer en PipelineManager
-        PipelineManager pipeline = Object.FindFirstObjectByType<PipelineManager>();
-        if (pipeline != null)
+        // 6. Enlazar MapVisualizer y MissionVisualizer en PipelineManager
+        PipelineManager pipelineManager = Object.FindFirstObjectByType<PipelineManager>();
+        if (pipelineManager != null)
         {
-            SerializedObject soPipe = new SerializedObject(pipeline);
+            SerializedObject soPipe = new SerializedObject(pipelineManager);
             soPipe.Update();
 
             SerializedProperty pVis = soPipe.FindProperty("missionVisualizer");
             if (pVis != null) pVis.objectReferenceValue = missionVisualizer;
 
+            SerializedProperty pMapVis = soPipe.FindProperty("mapVisualizer");
+            if (pMapVis != null) pMapVis.objectReferenceValue = mapVisualizer;
+
             SerializedProperty pGenStart = soPipe.FindProperty("generateOnStart");
             if (pGenStart != null) pGenStart.boolValue = true;
 
             soPipe.ApplyModifiedProperties();
-            EditorUtility.SetDirty(pipeline);
+            EditorUtility.SetDirty(pipelineManager);
         }
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());

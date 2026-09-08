@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Generador de mapas 2D mediante BSP (Binary Space Partitioning).
@@ -47,16 +46,7 @@ public class BspMapGenerator : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool showGizmo = true;
 
-    [Header("Tilemap (opcional, para visualizar)")]
-    [SerializeField] private Tilemap floorTilemap;
-    [SerializeField] private Tilemap wallTilemap;
-    [SerializeField] private TileBase floorTile;
-    [SerializeField] private TileBase wallTile;
 
-    public Tilemap FloorTilemap => floorTilemap;
-    public Tilemap WallTilemap => wallTilemap;
-    public TileBase FloorTile => floorTile;
-    public TileBase WallTile => wallTile;
 
     [Header("Ejecucion")]
     [Tooltip("Genera en Start(). Desactivalo si PipelineManager coordina la ejecucion completa.")]
@@ -148,23 +138,17 @@ public class BspMapGenerator : MonoBehaviour
         int idCounter = 0;
         CreateRooms(_root, ref idCounter);
 
-        // 3. Conectar las salas con pasillos, recorriendo el �rbol de abajo hacia arriba.
+        // 3. Conectar las salas con pasillos, recorriendo el rbol de abajo hacia arriba.
         ConnectRooms(_root);
 
         // 4. Pintar paredes alrededor de todo lo que es piso.
         MapUtils.PaintWalls(Result);
 
-        // 5. Volcar el resultado a los Tilemaps, si est�n asignados.
-        if (floorTilemap != null || wallTilemap != null)
-        {
-            DrawTilemap();
-        }
-
         return Result;
     }
 
     // ---------------------------------------------------------------------
-    // 1. Partici�n recursiva
+    // 1. Particin recursiva
     // ---------------------------------------------------------------------
     private void BuildTree(BspNode node, int iterationsLeft)
     {
@@ -314,37 +298,9 @@ public class BspMapGenerator : MonoBehaviour
     public void ClearMap()
     {
         Result = null;
-
-        if (floorTilemap != null) floorTilemap.ClearAllTiles();
-        if (wallTilemap != null) wallTilemap.ClearAllTiles();
     }
 
-    // ---------------------------------------------------------------------
-    // 5. Volcado a Tilemap
-    // ---------------------------------------------------------------------
-    private void DrawTilemap()
-    {
-        if (floorTilemap != null) floorTilemap.ClearAllTiles();
-        if (wallTilemap != null) wallTilemap.ClearAllTiles();
 
-        for (int x = 0; x < Result.Width; x++)
-        {
-            for (int y = 0; y < Result.Height; y++)
-            {
-                var cell = Result.Grid[x, y];
-                var pos = new Vector3Int(x, y, 0);
-
-                if (cell == CellType.Floor && floorTilemap != null && floorTile != null)
-                {
-                    floorTilemap.SetTile(pos, floorTile);
-                }
-                else if (cell == CellType.Wall && wallTilemap != null && wallTile != null)
-                {
-                    wallTilemap.SetTile(pos, wallTile);
-                }
-            }
-        }
-    }
 
     // ---------------------------------------------------------------------
     // Debug visual en el editor (�til mientras no tienes tiles asignados)

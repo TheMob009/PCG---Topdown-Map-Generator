@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Segunda etapa del pipeline: parte de un mapa ya generado por BSP y agrega
@@ -30,13 +29,7 @@ public class RandomWalkGenerator : MonoBehaviour
     [SerializeField] private bool useRandomSeed = true;
     [SerializeField] private int seed = 0;
 
-    [Header("Tilemap (opcional, para visualizar)")]
-    [SerializeField] private Tilemap floorTilemap;
-    [SerializeField] private Tilemap wallTilemap;
-    [SerializeField] private TileBase floorTile;
-    [SerializeField] private TileBase wallTile;
-    [Tooltip("Tile especial para los túneles de Random Walk (ej. tierra, cueva). Si es nulo se usa el mismo floorTile.")]
-    [SerializeField] private TileBase walkFloorTile;
+
 
     [Header("Visualización")]
 [SerializeField] private bool showGizmo = true;
@@ -61,9 +54,10 @@ public class RandomWalkGenerator : MonoBehaviour
 
     /// <summary>
     /// Celdas que este Random Walk agregó como piso nuevo (no las que ya
-    /// venían del BSP). Se usa solo para diferenciar visualmente en los
-    /// Gizmos; no es necesaria para el resto del pipeline.
+    /// venían del BSP). Expuesto para que MapVisualizer pueda diferenciar
+    /// visualmente los túneles del Random Walk de las salas del BSP.
     /// </summary>
+    public HashSet<Vector2Int> CarvedByWalk => _carvedByWalk;
     private readonly HashSet<Vector2Int> _carvedByWalk = new HashSet<Vector2Int>();
 
     /// <summary>
@@ -117,27 +111,6 @@ public class RandomWalkGenerator : MonoBehaviour
 
         // Recalcula las paredes: los nuevos túneles también necesitan su borde.
         MapUtils.PaintWalls(result);
-
-        var fTilemap = floorTilemap != null ? floorTilemap : bspGenerator.FloorTilemap;
-        var wTilemap = wallTilemap != null ? wallTilemap : bspGenerator.WallTilemap;
-        var fTile = floorTile != null ? floorTile : bspGenerator.FloorTile;
-        var wTile = wallTile != null ? wallTile : bspGenerator.WallTile;
-
-        if (fTilemap != null || wTilemap != null)
-        {
-            MapUtils.DrawTilemap(result, fTilemap, wTilemap, fTile, wTile);
-
-            // Si se configuró un tile especial para el camino, lo aplicamos
-            // sobre las celdas talladas por el Random Walk para diferenciarlas
-            // visualmente de las salas y pasillos del BSP.
-            if (walkFloorTile != null && fTilemap != null)
-            {
-                foreach (var cell in _carvedByWalk)
-                {
-                    fTilemap.SetTile(new Vector3Int(cell.x, cell.y, 0), walkFloorTile);
-                }
-            }
-        }
     }
 
     /// <summary>
