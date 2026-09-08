@@ -12,28 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: CaveFloor
   m_EditorClassIdentifier: 
-  m_DefaultSprite: {fileID: 1235374643, guid: 2d0ce7ffb3770dc4490d3c03df719a4e, type: 3}
+  m_DefaultSprite: {fileID: 1458063480, guid: d47ecc985d9a7e7419a583d34ed3b923, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
-  m_TilingRules:
-  - m_Id: 0
-    m_Sprites:
-    - {fileID: -1620202091, guid: 2d0ce7ffb3770dc4490d3c03df719a4e, type: 3}
-    m_GameObject: {fileID: 0}
-    m_MinAnimationSpeed: 1
-    m_MaxAnimationSpeed: 1
-    m_PerlinScale: 0.5
-    m_Output: 0
-    m_ColliderType: 1
-    m_RandomTransform: 0
-    m_Neighbors: 0100000001000000010000000100000001000000010000000100000001000000
-    m_NeighborPositions:
-    - {x: -1, y: 0, z: 0}
-    - {x: 0, y: 1, z: 0}
-    - {x: 0, y: -1, z: 0}
-    - {x: 1, y: 0, z: 0}
-    - {x: -1, y: 1, z: 0}
-    - {x: 1, y: 1, z: 0}
-    - {x: 1, y: -1, z: 0}
-    - {x: -1, y: -1, z: 0}
-    m_RuleTransform: 0
+  m_TilingRules: []
