@@ -187,11 +187,11 @@ public class PipelineManager : MonoBehaviour
 
         if (bspGenerator != null)
         {
-            bspGenerator.SetMinPartitionSize(20);
-            bspGenerator.SetMaxIterations(3);
+            bspGenerator.SetMinPartitionSize(25);
+            bspGenerator.SetMaxIterations(4);
             bspGenerator.SetRoomPadding(6);
-            bspGenerator.SetMinRoomSize(10);
-            bspGenerator.SetCorridorWidth(3);
+            bspGenerator.SetMinRoomSize(15);
+            bspGenerator.SetCorridorWidth(1);
             bspGenerator.SetUseStraightCorridors(true);
         }
 
