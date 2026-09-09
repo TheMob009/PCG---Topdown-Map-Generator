@@ -9,9 +9,10 @@ using TMPro;
 /// Responsabilidades:
 ///   - Toggle del panel con ESC.
 ///   - Dropdown de contexto global (Caverna / Estación Espacial) con presets.
+///   - Limpieza automática del mapa al cambiar de contexto para evitar overlap.
 ///   - Dropdown para cambiar entre paneles de algoritmo.
 ///   - Seed unificada con sub-seeds derivadas por algoritmo.
-///   - Botones de generación individual y pipeline completo.
+///   - Botones de generación individual y pipeline completo con renderizado en MapVisualizer.
 ///   - Sliders con labels dinámicos.
 ///   - Sincronización de dimensiones BSP → Perlin (read-only).
 ///   - Toggle de tipo de corredor BSP.
@@ -19,65 +20,6 @@ using TMPro;
 /// </summary>
 public class PCGUIManager : MonoBehaviour
 {
-    // =================================================================
-    // Presets de contexto global
-    // =================================================================
-
-    /// <summary>
-    /// Agrupa los valores de un preset de contexto global.
-    /// Caverna usa los valores por defecto de los generadores;
-    /// Estación Espacial usa valores más cuadriculados y ordenados.
-    /// </summary>
-    private struct MapContextPreset
-    {
-        // BSP
-        public int MinPartitionSize;
-        public int MaxIterations;
-        public int RoomPadding;
-        public int MinRoomSize;
-        public int CorridorWidth;
-        public bool UseStraightCorridors;
-        // Random Walk
-        public int AgentCount;
-        public int StepsPerAgent;
-        public int WalkWidth;
-        // Perlin
-        public float Frequency;
-        public int InterpolationMode; // índice del enum
-    }
-
-    /// <summary>Caverna: valores originales del Inspector (orgánico).</summary>
-    private static readonly MapContextPreset PresetCaverna = new MapContextPreset
-    {
-        MinPartitionSize    = 8,
-        MaxIterations       = 5,
-        RoomPadding         = 1,
-        MinRoomSize         = 4,
-        CorridorWidth       = 1,
-        UseStraightCorridors = false,
-        AgentCount          = 4,
-        StepsPerAgent       = 40,
-        WalkWidth           = 1,
-        Frequency           = 4f,
-        InterpolationMode   = 1, // Bicubic
-    };
-
-    /// <summary>Estación Espacial: salas amplias, corredores rectos, menor ruido.</summary>
-    private static readonly MapContextPreset PresetEspacial = new MapContextPreset
-    {
-        MinPartitionSize    = 10,
-        MaxIterations       = 4,
-        RoomPadding         = 2,
-        MinRoomSize         = 6,
-        CorridorWidth       = 2,
-        UseStraightCorridors = true,
-        AgentCount          = 3,
-        StepsPerAgent       = 25,
-        WalkWidth           = 2,
-        Frequency           = 3f,
-        InterpolationMode   = 0, // Bilinear
-    };
-
     // =================================================================
     // Referencias al pipeline
     // =================================================================
@@ -290,39 +232,40 @@ public class PCGUIManager : MonoBehaviour
     }
 
     // =================================================================
-    // CAMBIO DE CONTEXTO GLOBAL — aplica preset a la UI
+    // CAMBIO DE CONTEXTO GLOBAL — limpia mapa y aplica preset
     // =================================================================
 
     /// <summary>
-    /// Aplica el preset del contexto seleccionado a los campos de la UI.
+    /// Aplica el preset del contexto seleccionado, sincroniza MapVisualizer,
+    /// actualiza los campos de la UI y limpia el mapa anterior para evitar overlap.
     /// Index: 0 = Caverna, 1 = Estación Espacial.
-    /// No regenera el mapa — el usuario debe presionar Generar después.
     /// </summary>
     private void OnContextChanged(int index)
     {
-        MapContextPreset preset = index == 0 ? PresetCaverna : PresetEspacial;
-
-        // BSP
-        SetField(fldPartition,  preset.MinPartitionSize);
-        SetField(fldIterations, preset.MaxIterations);
-        SetField(fldPadding,    preset.RoomPadding);
-        SetField(fldSize,       preset.MinRoomSize);
-        SetField(fldWidth,      preset.CorridorWidth);
-        if (tglCorridors != null) tglCorridors.isOn = preset.UseStraightCorridors;
-
-        // Random Walk
-        SetField(fldCount, preset.AgentCount);
-        SetField(fldSteps, preset.StepsPerAgent);
-        SetField(fldWalk,  preset.WalkWidth);
-
-        // Perlin Noise
-        if (sliderFrequency != null)
+        // 1. Limpiar el mapa actual para evitar overlap visual
+        if (pipelineManager != null)
         {
-            sliderFrequency.value = preset.Frequency;
-            UpdateFrequencyLabel(preset.Frequency);
+            pipelineManager.ClearAll();
         }
-        if (dropdownInterpolation != null)
-            dropdownInterpolation.value = preset.InterpolationMode;
+
+        // 2. Aplicar los parámetros del contexto al PipelineManager
+        if (pipelineManager != null)
+        {
+            if (index == 0)
+            {
+                pipelineManager.ApplyExcavatedCaveParameters();
+            }
+            else
+            {
+                pipelineManager.ApplyLunarStationParameters();
+            }
+        }
+
+        // 3. Asegurar que MapVisualizer esté en el contexto correcto
+        ApplyContextValues();
+
+        // 4. Actualizar todos los campos de la UI con los nuevos valores del preset
+        PopulateUIFromGenerators();
     }
 
     // =================================================================
@@ -362,6 +305,18 @@ public class PCGUIManager : MonoBehaviour
     // =================================================================
     // APLICAR VALORES DE LA UI A LOS GENERADORES
     // =================================================================
+
+    private void ApplyContextValues()
+    {
+        if (pipelineManager == null || pipelineManager.MapVisualizer == null) return;
+
+        MapContext context = (cmbContexto != null && cmbContexto.value == 1)
+            ? MapContext.EstacionEspacial
+            : MapContext.Caverna;
+
+        pipelineManager.MapVisualizer.SetContext(context);
+        pipelineManager.MapVisualizer.SetRenderEmptyAsRock(context == MapContext.EstacionEspacial);
+    }
 
     private void ApplyBSPValues()
     {
@@ -460,10 +415,12 @@ public class PCGUIManager : MonoBehaviour
     private void OnGenerateAll()
     {
         int seed = ReadSeed();
+        ApplyContextValues();
         ApplyBSPValues();
         ApplyRandomWalkValues();
         ApplyPerlinValues();
         ApplyMissionGrammarValues();
+
         pipelineManager.SetGlobalSeed(seed);
         pipelineManager.GenerateAll();
     }
@@ -471,6 +428,7 @@ public class PCGUIManager : MonoBehaviour
     private void OnGenerateBSP()
     {
         int seed = ReadSeed();
+        ApplyContextValues();
         ApplyBSPValues();
 
         // Sub-seed BSP: posición 1 en la secuencia (0=Perlin, 1=BSP, ...)
@@ -479,11 +437,13 @@ public class PCGUIManager : MonoBehaviour
         pipelineManager?.BspGenerator?.SetSeed(rng.Next());
 
         pipelineManager.GenerateBspOnly();
+        pipelineManager.RenderMap(MapRenderStage.BSPOnly);
     }
 
     private void OnGenerateRandomWalk()
     {
         int seed = ReadSeed();
+        ApplyContextValues();
         ApplyRandomWalkValues();
 
         // Sub-seed RW: posición 2
@@ -492,11 +452,13 @@ public class PCGUIManager : MonoBehaviour
         pipelineManager?.RWGenerator?.SetSeed(rng.Next());
 
         pipelineManager.GenerateRandomWalkOnly();
+        pipelineManager.RenderMap(MapRenderStage.WithRandomWalk);
     }
 
     private void OnGeneratePerlin()
     {
         int seed = ReadSeed();
+        ApplyContextValues();
         ApplyBSPValues(); // sincroniza dimensiones BSP → Perlin
         ApplyPerlinValues();
 
@@ -510,6 +472,7 @@ public class PCGUIManager : MonoBehaviour
     private void OnGenerateMission()
     {
         int seed = ReadSeed();
+        ApplyContextValues();
         ApplyMissionGrammarValues();
 
         // Sub-seed MG: posición 3
