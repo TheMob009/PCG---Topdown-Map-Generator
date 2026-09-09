@@ -105,6 +105,7 @@ public class BspMapGenerator : MonoBehaviour
     public int GetCorridorWidth() => corridorWidth;
     public bool GetUseStraightCorridors() => useStraightCorridors;
 
+
     /// <summary>
     /// Valor ambiental (Perlin) promedio de una sala, si hay un
     /// PerlinMapGenerator asignado y ya gener su mapa. Devuelve 0 si no hay

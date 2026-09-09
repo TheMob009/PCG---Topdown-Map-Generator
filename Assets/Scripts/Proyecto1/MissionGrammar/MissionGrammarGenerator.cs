@@ -105,6 +105,8 @@ public class MissionGrammarGenerator : MonoBehaviour
     public void SetStartProduction(string value) { startProduction = value; }
     public void SetExpansionSteps(int value) { expansionSteps = value; }
     public void SetMissionContext(MissionContext ctx) { missionContext = ctx; }
+    public void SetTerminalProduction(string value) { terminalProduction = value; }
+    public void SetTaskProductions(System.Collections.Generic.List<string> productions) { taskProductions = productions; }
 
     // Getters para inicializar la UI con los valores actuales
     public int Seed => seed;
@@ -113,6 +115,9 @@ public class MissionGrammarGenerator : MonoBehaviour
     public string GetStartProduction() => startProduction;
     public int GetExpansionSteps() => expansionSteps;
     public MissionContext GetMissionContext() => missionContext;
+    public string GetTerminalProduction() => terminalProduction;
+    public System.Collections.Generic.List<string> GetTaskProductions() => taskProductions;
+
 
     // =====================================================================
     // GENERACIÓN
