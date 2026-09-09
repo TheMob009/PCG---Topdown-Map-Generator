@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
-  m_Name: SpaceAlt
+  m_Name: SpaceAltFloor
   m_EditorClassIdentifier: 
-  m_DefaultSprite: {fileID: -183830171, guid: 9cd6f36d37e25d241bf2d5af8396f05c, type: 3}
+  m_DefaultSprite: {fileID: -940982396, guid: 9cd6f36d37e25d241bf2d5af8396f05c, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 1
   m_TilingRules: []

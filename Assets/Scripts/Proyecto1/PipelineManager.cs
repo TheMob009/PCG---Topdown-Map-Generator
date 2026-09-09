@@ -70,8 +70,22 @@ public class PipelineManager : MonoBehaviour
     {
         if (generateOnStart)
         {
-            GenerateAll();
+            GenerateAllDefault();
         }
+    }
+
+    /// <summary>
+    /// Genera todo el pipeline aplicando los parámetros y contexto por defecto (Caverna Excavada).
+    /// </summary>
+    [ContextMenu("Generar Todo (Por Defecto: Caverna)")]
+    public void GenerateAllDefault()
+    {
+        ApplyExcavatedCaveParameters();
+
+        int randomMasterSeed = System.Environment.TickCount ^ System.Guid.NewGuid().GetHashCode();
+        SetGlobalSeed(randomMasterSeed);
+
+        GenerateAll();
     }
 
     /// <summary>
@@ -133,6 +147,7 @@ public class PipelineManager : MonoBehaviour
 
         if (mapVisualizer != null)
         {
+            mapVisualizer.SetContext(MapContext.Caverna);
             mapVisualizer.SetRenderEmptyAsRock(false);
         }
     }
@@ -187,8 +202,15 @@ public class PipelineManager : MonoBehaviour
             randomWalkGenerator.SetWalkWidth(1);
         }
 
+        if (missionGrammarGenerator != null)
+        {
+            missionGrammarGenerator.SetMissionContext(MissionContext.Colonia);
+            missionGrammarGenerator.SetExpansionSteps(3);
+        }
+
         if (mapVisualizer != null)
         {
+            mapVisualizer.SetContext(MapContext.EstacionEspacial);
             mapVisualizer.SetRenderEmptyAsRock(true);
         }
     }

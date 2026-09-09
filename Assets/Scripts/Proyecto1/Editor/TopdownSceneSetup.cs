@@ -147,6 +147,25 @@ public static class TopdownSceneSetup
             if (pRw != null && rwGen != null) pRw.objectReferenceValue = rwGen;
             if (pPerlin != null && perlinGen != null) pPerlin.objectReferenceValue = perlinGen;
 
+            // Asignar tiles de Caverna y Estacion Espacial si estan disponibles
+            AssignContextTiles(soMap.FindProperty("caveTiles"),
+                wallPath: "Assets/Sprites/CaveContext/CaveWall.asset",
+                emptyPath: null,
+                renderEmpty: false,
+                floorAPath: "Assets/Sprites/CaveContext/CaveFloor.asset",
+                walkAPath: "Assets/Sprites/CaveContext/CaveWalk.asset",
+                floorBPath: "Assets/Sprites/CaveContext/CaveAltFloor.asset",
+                walkBPath: "Assets/Sprites/CaveContext/CaveAltWalk.asset");
+
+            AssignContextTiles(soMap.FindProperty("spaceTiles"),
+                wallPath: "Assets/Sprites/SpaceContext/SpaceWall.asset",
+                emptyPath: "Assets/Sprites/SpaceContext/SpaceRocks.asset",
+                renderEmpty: true,
+                floorAPath: "Assets/Sprites/SpaceContext/SpaceFloor.asset",
+                walkAPath: "Assets/Sprites/SpaceContext/SpaceWalk.asset",
+                floorBPath: "Assets/Sprites/SpaceContext/SpaceAlt.asset",
+                walkBPath: "Assets/Sprites/SpaceContext/SpaceWalk.asset");
+
             soMap.ApplyModifiedProperties();
             EditorUtility.SetDirty(mapVisualizer);
         }
@@ -173,6 +192,43 @@ public static class TopdownSceneSetup
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log("[TopdownSceneSetup] Escena TopDown 2D configurada exitosamente con Grid, FloorTilemap, WallTilemap y MissionVisualizer.");
+    }
+
+    private static void AssignContextTiles(
+        SerializedProperty contextProp,
+        string wallPath,
+        string emptyPath,
+        bool renderEmpty,
+        string floorAPath,
+        string walkAPath,
+        string floorBPath,
+        string walkBPath)
+    {
+        if (contextProp == null) return;
+
+        AssignTileProperty(contextProp.FindPropertyRelative("wallTile"), wallPath);
+        AssignTileProperty(contextProp.FindPropertyRelative("emptyOrRockTile"), emptyPath);
+
+        var pRenderEmpty = contextProp.FindPropertyRelative("renderEmptyAsRock");
+        if (pRenderEmpty != null) pRenderEmpty.boolValue = renderEmpty;
+
+        AssignTileProperty(contextProp.FindPropertyRelative("floorTileA"), floorAPath);
+        AssignTileProperty(contextProp.FindPropertyRelative("walkFloorTileA"), walkAPath);
+        AssignTileProperty(contextProp.FindPropertyRelative("floorTileB"), floorBPath);
+        AssignTileProperty(contextProp.FindPropertyRelative("walkFloorTileB"), walkBPath);
+    }
+
+    private static void AssignTileProperty(SerializedProperty prop, string path)
+    {
+        if (prop == null || string.IsNullOrEmpty(path)) return;
+        if (prop.objectReferenceValue == null)
+        {
+            var tile = AssetDatabase.LoadAssetAtPath<TileBase>(path);
+            if (tile != null)
+            {
+                prop.objectReferenceValue = tile;
+            }
+        }
     }
 }
 #endif

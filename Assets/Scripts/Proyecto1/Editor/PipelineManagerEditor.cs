@@ -29,7 +29,7 @@ public class PipelineManagerEditor : Editor
 
         if (GUILayout.Button("Generar Todo (Perlin > BSP > Random Walk > Mision)", GUILayout.Height(35)))
         {
-            RunAction(pipeline, "Generar Pipeline Completo", pipeline.GenerateAll);
+            RunAction(pipeline, "Generar Pipeline Completo", pipeline.GenerateAllDefault);
         }
 
         EditorGUILayout.Space(3);

@@ -393,6 +393,14 @@ public class PCGUIManager : MonoBehaviour
         ApplyPerlinValues();
         ApplyMissionGrammarValues();
 
+        if (pipelineManager != null && pipelineManager.MapVisualizer != null)
+        {
+            var ctx = (dropdownMissionContext != null && dropdownMissionContext.value == 1)
+                ? MapContext.EstacionEspacial
+                : MapContext.Caverna;
+            pipelineManager.MapVisualizer.SetContext(ctx);
+        }
+
         pipelineManager.SetGlobalSeed(seed);
         pipelineManager.GenerateAll();
         // GenerateAll ya incluye RenderMap(Full)
