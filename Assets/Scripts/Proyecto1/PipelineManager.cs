@@ -136,7 +136,9 @@ public class PipelineManager : MonoBehaviour
         {
             randomWalkGenerator.SetAgentCount(6);
             randomWalkGenerator.SetStepsPerAgent(100);
-            randomWalkGenerator.SetWalkWidth(1);
+            randomWalkGenerator.SetWalkWidth(2);
+            randomWalkGenerator.SetDirectionPersistence(0.35f);
+            randomWalkGenerator.SetSpawnFromRoomEdge(false);
         }
 
         if (missionGrammarGenerator != null)
@@ -191,7 +193,7 @@ public class PipelineManager : MonoBehaviour
             bspGenerator.SetMaxIterations(4);
             bspGenerator.SetRoomPadding(6);
             bspGenerator.SetMinRoomSize(15);
-            bspGenerator.SetCorridorWidth(1);
+            bspGenerator.SetCorridorWidth(3);
             bspGenerator.SetUseStraightCorridors(true);
         }
 
@@ -200,6 +202,8 @@ public class PipelineManager : MonoBehaviour
             randomWalkGenerator.SetAgentCount(3);
             randomWalkGenerator.SetStepsPerAgent(80);
             randomWalkGenerator.SetWalkWidth(1);
+            randomWalkGenerator.SetDirectionPersistence(0.85f);
+            randomWalkGenerator.SetSpawnFromRoomEdge(true);
         }
 
         if (missionGrammarGenerator != null)

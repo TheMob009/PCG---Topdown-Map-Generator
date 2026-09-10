@@ -25,6 +25,14 @@ public class RandomWalkGenerator : MonoBehaviour
     [Tooltip("Ancho del túnel tallado (1 = camino de una celda, más ancho da galerías más amplias).")]
     [SerializeField] private int walkWidth = 1;
 
+    [Header("Forma del trazo")]
+    [Tooltip("Probabilidad de mantener la misma dirección del paso anterior en vez de elegir una nueva al azar. 0 = completamente aleatorio (comportamiento original, trazo errante tipo galería). Valores altos (ej. 0.85) producen trazos rectos con giros ocasionales, como un ducto de ventilación.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float directionPersistence = 0f;
+
+    [Tooltip("Si es true, cada agente nace en una esquina/borde de su sala de partida en vez del centro. Útil para que los túneles se sientan como ductos que corren pegados a los muros de los módulos, en vez de perforar el centro de las salas.")]
+    [SerializeField] private bool spawnFromRoomEdge = false;
+
     [Header("Semilla")]
     [SerializeField] private bool useRandomSeed = true;
     [SerializeField] private int seed = 0;
@@ -67,12 +75,16 @@ public class RandomWalkGenerator : MonoBehaviour
     public void SetAgentCount(int value) { agentCount = value; }
     public void SetStepsPerAgent(int value) { stepsPerAgent = value; }
     public void SetWalkWidth(int value) { walkWidth = value; }
+    public void SetDirectionPersistence(float value) { directionPersistence = Mathf.Clamp01(value); }
+    public void SetSpawnFromRoomEdge(bool value) { spawnFromRoomEdge = value; }
 
     // Getters para inicializar la UI con los valores actuales
     public int Seed => seed;
     public int GetAgentCount() => agentCount;
     public int GetStepsPerAgent() => stepsPerAgent;
     public int GetWalkWidth() => walkWidth;
+    public float GetDirectionPersistence() => directionPersistence;
+    public bool GetSpawnFromRoomEdge() => spawnFromRoomEdge;
 
     /// <summary>
     /// Ejecuta el Random Walk sobre el grid ya generado por el BSP.
@@ -120,27 +132,74 @@ public class RandomWalkGenerator : MonoBehaviour
     private void RunAgent(BspMapResult result)
     {
         var startRoom = result.Rooms[_rng.Next(result.Rooms.Count)];
-        Vector2Int pos = startRoom.Center;
+        Vector2Int pos = spawnFromRoomEdge
+            ? GetRoomEdgeSpawnPoint(startRoom)
+            : startRoom.Center;
+
+        // Dirección inicial aleatoria; se reutiliza entre pasos según
+        // directionPersistence para sesgar el trazo (más recto o más errante)
+        // sin cambiar el algoritmo: sigue siendo el mismo Random Walk, solo
+        // con una probabilidad de repetir la última dirección elegida.
+        Vector2Int lastDir = Directions[_rng.Next(Directions.Length)];
 
         for (int step = 0; step < stepsPerAgent; step++)
         {
             CarveAt(result, pos);
 
-            var dir = Directions[_rng.Next(Directions.Length)];
+            Vector2Int dir = _rng.NextDouble() < directionPersistence
+                ? lastDir
+                : Directions[_rng.Next(Directions.Length)];
+
             var next = pos + dir;
 
-            // Si el siguiente paso se sale del mapa, se ignora ese paso y se
-            // intenta de nuevo en el siguiente ciclo (el agente no se mueve
-            // esa iteración, pero sigue gastando pasos, lo que evita loops
-            // infinitos pegado al borde).
+            // Si la dirección persistida se sale del mapa, se prueba una
+            // dirección alternativa al azar para este paso, evitando que un
+            // agente con alta persistencia quede pegado sin avanzar contra
+            // el borde del mapa.
+            if (!result.InBounds(next.x, next.y))
+            {
+                dir = Directions[_rng.Next(Directions.Length)];
+                next = pos + dir;
+            }
+
             if (result.InBounds(next.x, next.y))
             {
                 pos = next;
             }
+
+            lastDir = dir;
         }
 
         // Talla también la última posición alcanzada.
         CarveAt(result, pos);
+    }
+
+    /// <summary>
+    /// Elige un punto de partida en una esquina de la sala (con un pequeño
+    /// margen hacia adentro para seguir siendo piso válido), en vez del
+    /// centro. Simula que el túnel/ducto nace pegado al borde del módulo.
+    /// </summary>
+    private Vector2Int GetRoomEdgeSpawnPoint(BspRoom room)
+    {
+        var b = room.Bounds;
+
+        int insetX = Mathf.Clamp(b.width - 1, 0, 1);
+        int insetY = Mathf.Clamp(b.height - 1, 0, 1);
+
+        int corner = _rng.Next(4);
+        int x, y;
+
+        switch (corner)
+        {
+            case 0: x = b.x + insetX; y = b.y + insetY; break;                               // inferior-izquierda
+            case 1: x = b.x + b.width - 1 - insetX; y = b.y + insetY; break;                  // inferior-derecha
+            case 2: x = b.x + insetX; y = b.y + b.height - 1 - insetY; break;                 // superior-izquierda
+            default: x = b.x + b.width - 1 - insetX; y = b.y + b.height - 1 - insetY; break;  // superior-derecha
+        }
+
+        return new Vector2Int(
+            Mathf.Clamp(x, b.x, b.x + b.width - 1),
+            Mathf.Clamp(y, b.y, b.y + b.height - 1));
     }
 
     /// <summary>
