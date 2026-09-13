@@ -1,4 +1,4 @@
-# Proyecto 1 — Procedural Content Generation Pipeline
+# TopDownMapGenerator — Procedural Content Generation Pipeline
 
 > A Unity 2D procedural dungeon generator that combines **BSP partitioning**, **Random Walk**, **Perlin Noise** and a **Mission Grammar** system into a fully configurable pipeline.
 
