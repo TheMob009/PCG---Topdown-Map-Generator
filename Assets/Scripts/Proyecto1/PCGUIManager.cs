@@ -39,6 +39,9 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private TMP_InputField fldCount;
     [SerializeField] private TMP_InputField fldSteps;
     [SerializeField] private TMP_InputField fldWalk;
+    [SerializeField] private Slider sliderDirectionPersistence;
+    [SerializeField] private TMP_Text lblDirectionPersistence;
+    [SerializeField] private Toggle tglSpawnFromRoomEdge;
     [SerializeField] private Button btnGenerarRandomWalk;
 
     [Header("Perlin Noise")]
@@ -80,6 +83,8 @@ public class PCGUIManager : MonoBehaviour
         // --- Sliders ---
         if (sliderFrequency != null)
             sliderFrequency.onValueChanged.AddListener(v => UpdateFrequencyLabel(v));
+        if (sliderDirectionPersistence != null)
+            sliderDirectionPersistence.onValueChanged.AddListener(v => UpdateDirectionPersistenceLabel(v));
         if (sliderExpansionSteps != null)
             sliderExpansionSteps.onValueChanged.AddListener(v => UpdateExpansionStepsLabel(Mathf.RoundToInt(v)));
 
@@ -129,6 +134,14 @@ public class PCGUIManager : MonoBehaviour
             SetField(fldCount, rw.GetAgentCount());
             SetField(fldSteps, rw.GetStepsPerAgent());
             SetField(fldWalk,  rw.GetWalkWidth());
+
+            if (sliderDirectionPersistence != null)
+            {
+                sliderDirectionPersistence.value = rw.GetDirectionPersistence();
+                UpdateDirectionPersistenceLabel(rw.GetDirectionPersistence());
+            }
+            if (tglSpawnFromRoomEdge != null)
+                tglSpawnFromRoomEdge.isOn = rw.GetSpawnFromRoomEdge();
         }
 
         // --- Perlin Noise ---
@@ -266,6 +279,11 @@ public class PCGUIManager : MonoBehaviour
         rw.SetAgentCount(  ReadInt(fldCount, rw.GetAgentCount()));
         rw.SetStepsPerAgent(ReadInt(fldSteps, rw.GetStepsPerAgent()));
         rw.SetWalkWidth(   ReadInt(fldWalk,  rw.GetWalkWidth()));
+
+        if (sliderDirectionPersistence != null)
+            rw.SetDirectionPersistence(sliderDirectionPersistence.value);
+        if (tglSpawnFromRoomEdge != null)
+            rw.SetSpawnFromRoomEdge(tglSpawnFromRoomEdge.isOn);
     }
 
     private void ApplyPerlinValues()
@@ -396,6 +414,12 @@ public class PCGUIManager : MonoBehaviour
     {
         if (lblFrecuency != null)
             lblFrecuency.text = "Frecuencia: " + value.ToString("F1");
+    }
+
+    private void UpdateDirectionPersistenceLabel(float value)
+    {
+        if (lblDirectionPersistence != null)
+            lblDirectionPersistence.text = "Persistencia: " + value.ToString("F2");
     }
 
     private void UpdateExpansionStepsLabel(int value)
