@@ -276,7 +276,7 @@ Assets/Scripts/Proyecto1/
 | Asset | Author | Link |
 |---|---|---|
 | Cave Platformer Tileset (floor, wall & platformer set) | **RottingPixels** | [itch.io](https://rottingpixels.itch.io/cave-platformer-tileset-16x16free) |
-| Free Sci-Fi TileSet — Space Station | **Aske4** | [itch.io](https://aske4.itch.io/free-sci-fi-tileset-space-station) |
+| Free Sci-Fi TileSet Space Station | **Aske4** | [itch.io](https://aske4.itch.io/free-space-station) |
 | Fantasy UI Borders | **Kenney** | [kenney.nl](https://kenney.nl/assets/fantasy-ui-borders) |
 
 ### Fonts
