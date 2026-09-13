@@ -5607,8 +5607,8 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1144579284}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
-  m_WholeNumbers: 0
+  m_MaxValue: 10
+  m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -14863,7 +14863,7 @@ RectTransform:
   m_Father: {fileID: 900567891}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.8133334}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -20502,7 +20502,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1465648453}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.8133334
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -22383,7 +22383,7 @@ MonoBehaviour:
   minZoom: 2
   maxZoom: 30
   zoomSmoothTime: 0.1
-  panMouseButton: 0
+  panMouseButton: 1
   panSmoothTime: 0.05
   useBounds: 0
   boundsMin: {x: -50, y: -50}
