@@ -184,8 +184,42 @@ public static class TopdownSceneSetup
             EditorUtility.SetDirty(pipelineManager);
         }
 
+        // 7. Buscar o crear la Main Camera y añadir CameraController
+        Camera mainCam = Camera.main;
+        if (mainCam == null)
+        {
+            GameObject camGo = new GameObject("Main Camera",
+                typeof(Camera), typeof(AudioListener));
+            camGo.tag = "MainCamera";
+            Undo.RegisterCreatedObjectUndo(camGo, "Crear Main Camera");
+            mainCam = camGo.GetComponent<Camera>();
+            mainCam.orthographic = true;
+            mainCam.orthographicSize = 10f;
+            mainCam.transform.position = new Vector3(0f, 0f, -10f);
+        }
+
+        CameraController camCtrl = mainCam.GetComponent<CameraController>();
+        if (camCtrl == null)
+        {
+            camCtrl = Undo.AddComponent<CameraController>(mainCam.gameObject);
+        }
+
+        // Ajustar zoom inicial al tamaño del mapa si hay PipelineManager
+        if (pipelineManager != null && camCtrl != null)
+        {
+            Vector3 camPos = mainCam.transform.position;
+            camPos.x = pipelineManager.MapWidth * 0.5f;
+            camPos.y = pipelineManager.MapHeight * 0.5f;
+            mainCam.transform.position = camPos;
+
+            // FitToArea no puede llamarse en Edit Mode (necesita Screen), lo dejamos en los defaults.
+            // El usuario puede llamarlo manualmente en Play Mode.
+        }
+
+        EditorUtility.SetDirty(mainCam);
+
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log("[TopdownSceneSetup] Escena TopDown 2D configurada exitosamente con Grid, FloorTilemap, WallTilemap y MissionVisualizer.");
+        Debug.Log("[TopdownSceneSetup] Escena TopDown 2D configurada exitosamente con Grid, FloorTilemap, WallTilemap, MissionVisualizer y CameraController.");
     }
 
     private static void AssignContextTiles(
