@@ -5,13 +5,13 @@
 [System.Serializable]
 public class MissionRoomAssignment
 {
-    /// <summary>Sala del BSP asignada a esta acción.</summary>
+    //Sala del BSP asignada a esta acción
     public BspRoom Room;
 
-    /// <summary>Tipo de acción de misión asignada.</summary>
+    //Tipo de acción de misión asignada
     public MissionSymbolType SymbolType;
 
-    /// <summary>Caracter original de la cadena gramatical.</summary>
+    //Caracter original de la cadena gramatical
     public char Symbol;
 
     public MissionRoomAssignment(BspRoom room, MissionSymbolType symbolType, char symbol)

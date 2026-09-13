@@ -4,12 +4,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-/// <summary>
-/// Utilidad de Editor para configurar automaticamente la escena de Proyecto1:
-/// - Crea el GameObject Grid con FloorTilemap y WallTilemap si no existen.
-/// - Configura el componente MissionVisualizer y lo conecta a MissionGrammarGenerator.
-/// - Enlaza todas las referencias en BSPMapGenerator, RandomWalkGenerator y PipelineManager.
-/// </summary>
 public static class TopdownSceneSetup
 {
     [InitializeOnLoadMethod]

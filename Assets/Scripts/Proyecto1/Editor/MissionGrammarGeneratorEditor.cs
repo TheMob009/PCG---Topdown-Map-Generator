@@ -2,12 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Agrega un botón "Generar Misión" al Inspector del MissionGrammarGenerator,
-/// para iterar sobre la gramática y las asignaciones sin entrar a Play Mode.
-///
-/// Debe estar dentro de una carpeta llamada "Editor" en el proyecto.
-/// </summary>
 [CustomEditor(typeof(MissionGrammarGenerator))]
 public class MissionGrammarGeneratorEditor : Editor
 {
@@ -20,8 +14,6 @@ public class MissionGrammarGeneratorEditor : Editor
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Herramientas de Editor", EditorStyles.boldLabel);
 
-        // Verificar si el BSP tiene resultado
-        // Usamos SerializedProperty para acceder al campo privado bspGenerator
         var bspProp = serializedObject.FindProperty("bspGenerator");
         BspMapGenerator bspGen = bspProp.objectReferenceValue as BspMapGenerator;
         bool hasBspResult = bspGen != null && bspGen.Result != null && bspGen.Result.Rooms.Count > 0;
@@ -52,7 +44,6 @@ public class MissionGrammarGeneratorEditor : Editor
             }
         }
 
-        // Info del resultado actual
         if (generator.Assignments != null && generator.Assignments.Count > 0)
         {
             EditorGUILayout.Space(5);

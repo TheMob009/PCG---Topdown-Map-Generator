@@ -5,15 +5,11 @@ using UnityEngine;
 /// Generador de mapas 2D mediante BSP (Binary Space Partitioning).
 ///
 /// Flujo:
-///   1. Particiona el �rea total recursivamente en un �rbol binario.
-///   2. Crea una sala dentro de cada partici�n hoja.
-///   3. Conecta las salas con pasillos en L, recorriendo el �rbol
+///   1. Corta el area total recursivamente en un arbol binario.
+///   2. Crea una sala dentro de cada particion hoja.
+///   3. Conecta las salas con pasillos en L, recorriendo el arbol
 ///      (conecta hermanos, luego niveles superiores).
 ///   4. Vuelca el resultado a un CellType[,] y lo pinta en un Tilemap.
-///
-/// Este componente es el punto de partida del pipeline: expone <see cref="Result"/>
-/// (grid + lista de salas) para que Perlin Noise, Random Walk, L-System y la
-/// Gram�tica de misiones trabajen sobre la misma estructura de datos.
 /// </summary>
 public class BspMapGenerator : MonoBehaviour
 {
@@ -24,7 +20,7 @@ public class BspMapGenerator : MonoBehaviour
     [Header("Parámetros de partición BSP")]
     [Tooltip("Tamaño minimo de una partición. Evita salas o cortes demasiado pequeños.")]
     [SerializeField] private int minPartitionSize = 8;
-    [Tooltip("Cuantas veces se intenta subdividir recursivamente. M�s iteraciones = más salas.")]
+    [Tooltip("Cuantas veces se intenta subdividir recursivamente. Mas iteraciones = más salas.")]
     [SerializeField] private int maxIterations = 5;
 
     [Header("Parámetros de las salas")]
@@ -53,28 +49,23 @@ public class BspMapGenerator : MonoBehaviour
 
 
     [Header("Ejecucion")]
-    [Tooltip("Genera en Start(). Desactivalo si PipelineManager coordina la ejecucion completa.")]
     [SerializeField] private bool generateOnStart = false;
 
     private System.Random _rng;
     private BspNode _root;
 
     /// <summary>
-    /// Raiz del arbol BSP. Expuesta como lectura para que otros algoritmos
-    /// del pipeline (como la Gramatica de misiones) puedan reconstruir la
-    /// adyacencia entre salas recorriendo la estructura del arbol.
+    /// Raiz del arbol BSP. Es pública para que otros algoritmos
+    /// del generador (como la Gramatica de misiones) puedan volver a calcular
+    /// como se conectan los nodos entre salas recorriendo la estructura del arbol.
     /// </summary>
     public BspNode Root => _root;
 
-    /// <summary>
-    /// Resultado pblico del generador: grid + lista de salas.
-    /// Los dems algoritmos del pipeline deben leer de aqu.
-    /// </summary>
     public BspMapResult Result { get; private set; }
 
     /// <summary>
-    /// Permite que un orquestador externo (PipelineManager) sincronice el
-    /// tamao del mapa, para que BSP, Random Walk y Perlin usen siempre las
+    /// Permite que el pipeline managersincronice el
+    /// tamaño del mapa, para que BSP, Random Walk y Perlin usen siempre las
     /// mismas dimensiones sin tener que editarlas a mano en cada Inspector.
     /// </summary>
     public void SetDimensions(int width, int height)
@@ -83,15 +74,30 @@ public class BspMapGenerator : MonoBehaviour
         mapHeight = height;
     }
 
-    /// <summary>
-    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
-    /// </summary>
-    public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
-    public void SetMinPartitionSize(int value) { minPartitionSize = value; }
-    public void SetMaxIterations(int value) { maxIterations = value; }
-    public void SetRoomPadding(int value) { roomPadding = value; }
-    public void SetMinRoomSize(int value) { minRoomSize = value; }
-    public void SetCorridorWidth(int value) { corridorWidth = value; }
+    public void SetSeed(int newSeed)
+    {
+        useRandomSeed = false; seed = newSeed;
+    }
+    public void SetMinPartitionSize(int value)
+    {
+        minPartitionSize = value;
+    }
+    public void SetMaxIterations(int value)
+    {
+        maxIterations = value;
+    }
+    public void SetRoomPadding(int value)
+    {
+        roomPadding = value;
+    }
+    public void SetMinRoomSize(int value)
+    {
+        minRoomSize = value;
+    }
+    public void SetCorridorWidth(int value)
+    {
+        corridorWidth = value;
+    }
     public void SetUseStraightCorridors(bool value) { useStraightCorridors = value; }
 
     // Getters para inicializar la UI con los valores actuales
@@ -113,7 +119,10 @@ public class BspMapGenerator : MonoBehaviour
     /// </summary>
     public float GetRoomEnvironmentValue(BspRoom room)
     {
-        if (perlinGenerator == null || perlinGenerator.NoiseMap == null) return 0f;
+        if (perlinGenerator == null || perlinGenerator.NoiseMap == null)
+        {
+            return 0f;
+        }
         return perlinGenerator.GetAverageValueInRoom(room);
     }
 
@@ -125,11 +134,7 @@ public class BspMapGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Ejecuta el proceso completo de generacin. Puede llamarse desde otro
-    /// script (por ejemplo, un GameManager que orquesta todo el pipeline)
-    /// en lugar de depender de Start().
-    /// </summary>
+    // Ejecuta el proceso completo de generacion. es público para que se pueda administrar desde el pipeline manager
     public BspMapResult Generate()
     {
         seed = useRandomSeed ? System.Environment.TickCount : seed;
@@ -137,41 +142,40 @@ public class BspMapGenerator : MonoBehaviour
 
         Result = new BspMapResult(mapWidth, mapHeight);
 
-        // 1. Construir el �rbol BSP particionando el espacio completo.
+        // 1. Construir el arbol BSP cortando el espacio completo.
         _root = new BspNode(new RectInt(0, 0, mapWidth, mapHeight));
         BuildTree(_root, maxIterations);
 
-        // 2. Crear una sala dentro de cada hoja del �rbol.
+        // 2. Crear una sala dentro de cada hoja del arbol.
         int idCounter = 0;
         CreateRooms(_root, ref idCounter);
 
-        // 3. Conectar las salas con pasillos, recorriendo el rbol de abajo hacia arriba.
+        // 3. Conectar las salas con pasillos, recorriendo el arbol de abajo hacia arriba.
         ConnectRooms(_root);
 
-        // 4. Pintar paredes alrededor de todo lo que es piso.
+        // 4. Pintar paredes alrededor de todo lo que es el piso.
         MapUtils.PaintWalls(Result);
 
         return Result;
     }
 
-    // ---------------------------------------------------------------------
-    // 1. Particin recursiva
-    // ---------------------------------------------------------------------
+
+    //acá se corta de forma recursiva el arbol
     private void BuildTree(BspNode node, int iterationsLeft)
     {
-        if (iterationsLeft <= 0) return;
+        if (iterationsLeft <= 0)
+        {
+            return;
+        }
 
         if (node.Split(minPartitionSize, _rng))
         {
             BuildTree(node.Left, iterationsLeft - 1);
             BuildTree(node.Right, iterationsLeft - 1);
         }
-        // Si Split() falla, el nodo se queda como hoja (�rea muy peque�a).
     }
 
-    // ---------------------------------------------------------------------
-    // 2. Generaci�n de salas dentro de cada hoja
-    // ---------------------------------------------------------------------
+    // 2. Generacion de salas dentro de cada hoja
     private void CreateRooms(BspNode node, ref int idCounter)
     {
         if (node.IsLeaf)
@@ -211,23 +215,26 @@ public class BspMapGenerator : MonoBehaviour
             for (int y = rect.y; y < rect.y + rect.height; y++)
             {
                 if (Result.InBounds(x, y))
+                {
                     Result.Grid[x, y] = CellType.Floor;
+                }
             }
         }
     }
 
-    // ---------------------------------------------------------------------
-    // 3. Conexi�n de salas mediante pasillos en L
-    // ---------------------------------------------------------------------
 
+    // 3. Conexion de salas mediante pasillos en L
     /// <summary>
-    /// Recorre el �rbol de abajo hacia arriba: cada nodo interno conecta una
-    /// sala representativa de su sub�rbol izquierdo con una de su sub�rbol
-    /// derecho. Esto garantiza que el grafo de salas quede totalmente conexo.
+    /// Recorre el arbol de abajo hacia arriba: cada nodo interno conecta una
+    /// sala representativa de su subarbol izquierdo con una de su subarbol
+    /// derecho. Esto garantiza que el grafo de salas quede totalmente conectado.
     /// </summary>
     private BspRoom ConnectRooms(BspNode node)
     {
-        if (node.IsLeaf) return node.Room;
+        if (node.IsLeaf)
+        {
+            return node.Room;
+        }
 
         BspRoom leftRoom = ConnectRooms(node.Left);
         BspRoom rightRoom = ConnectRooms(node.Right);
@@ -235,17 +242,23 @@ public class BspMapGenerator : MonoBehaviour
         if (leftRoom != null && rightRoom != null)
         {
             if (useStraightCorridors)
+            {
                 CarveCorridorStraight(node, leftRoom, rightRoom);
+            }
+
             else
+            {
                 CarveCorridor(leftRoom.Center, rightRoom.Center);
+            }
+
         }
 
-        // Sube una sala representativa hacia el nivel superior del �rbol.
+        // Sube una sala representativa hacia el nivel superior del arbol.
         return leftRoom ?? rightRoom;
     }
 
     /// <summary>
-    /// Excava un pasillo en forma de L entre dos puntos, eligiendo al azar si
+    /// Hace un pasillo en forma de L entre dos puntos, eligiendo al azar si
     /// primero se mueve en horizontal o en vertical (evita que todos los
     /// pasillos tengan la misma forma visual).
     /// </summary>
@@ -264,7 +277,7 @@ public class BspMapGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Excava un corredor RECTO entre dos salas usando la direccion de
+    /// Hace un corredor RECTO entre dos salas usando la direccion de
     /// particion del nodo padre (SplitHorizontal):
     ///   true  = salas arriba/abajo = corredor vertical en X promedio.
     ///   false = salas izq/der      = corredor horizontal en Y promedio.
@@ -306,9 +319,7 @@ public class BspMapGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Excava una celda de pasillo, expandiendo el ancho seg�n corridorWidth.
-    /// </summary>
+    // Hace una celda de pasillo, expandiendo el ancho segun el  corridorWidth.
     private void CarveCorridorCell(int cx, int cy)
     {
         int half = corridorWidth / 2;
@@ -319,28 +330,25 @@ public class BspMapGenerator : MonoBehaviour
                 int x = cx + dx;
                 int y = cy + dy;
                 if (Result.InBounds(x, y))
+                {
                     Result.Grid[x, y] = CellType.Floor;
+                }
+
             }
         }
     }
 
-    /// <summary>
-    /// Borra el resultado actual y los tilemaps, sin generar uno nuevo.
-    /// Pensado para el bot�n "Limpiar" del editor.
-    /// </summary>
     public void ClearMap()
     {
         Result = null;
     }
 
-
-
-    // ---------------------------------------------------------------------
-    // Debug visual en el editor (�til mientras no tienes tiles asignados)
-    // ---------------------------------------------------------------------
     private void OnDrawGizmos()
     {
-        if (Result == null || !showGizmo) return;
+        if (Result == null || !showGizmo)
+        {
+            return;
+        }
 
         for (int x = 0; x < Result.Width; x++)
         {
@@ -358,7 +366,7 @@ public class BspMapGenerator : MonoBehaviour
         }
 
         // Marca el centro de cada sala con su Id, para verificar que la
-        // Gram�tica de misiones podr� referenciarlas correctamente.
+        // Gramatica de misiones puede referenciarlas correctamente.
         Gizmos.color = Color.red;
         foreach (var room in Result.Rooms)
         {

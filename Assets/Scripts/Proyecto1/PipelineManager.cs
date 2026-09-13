@@ -1,19 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Orquesta el pipeline completo de generaci�n en el orden definido por el
-/// plan del proyecto:
-///
-///   SEED -> PERLIN NOISE -> BSP -> RANDOM WALK -> (L-System) -> (Gram�tica)
-///
-/// Este componente no genera nada por s� mismo: coordina a los tres
-/// generadores ya existentes, sincroniza sus dimensiones y respeta el orden
-/// de dependencias (Random Walk necesita el resultado del BSP; el BSP puede
-/// opcionalmente consultar a Perlin, pero no depende de �l para su geometr�a).
-///
-/// Asigna aqu� las referencias a PerlinMapGenerator, BspMapGenerator y
-/// RandomWalkGenerator ya existentes en la escena.
-/// </summary>
 public class PipelineManager : MonoBehaviour
 {
     [Header("Dimensiones del mapa (fuente �nica de verdad)")]
@@ -36,20 +22,12 @@ public class PipelineManager : MonoBehaviour
     public int MapWidth => mapWidth;
     public int MapHeight => mapHeight;
 
-    /// <summary>
-    /// Permite configurar las dimensiones desde la UI.
-    /// </summary>
     public void SetDimensions(int width, int height)
     {
         mapWidth = width;
         mapHeight = height;
     }
 
-    /// <summary>
-    /// Propaga una seed maestra a todos los generadores, derivando sub-seeds
-    /// deterministas para que cada algoritmo genere resultados distintos pero
-    /// reproducibles con la misma seed.
-    /// </summary>
     public void SetGlobalSeed(int masterSeed)
     {
         var masterRng = new System.Random(masterSeed);
@@ -74,9 +52,6 @@ public class PipelineManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Genera todo el pipeline aplicando los parámetros y contexto por defecto (Caverna Excavada).
-    /// </summary>
     [ContextMenu("Generar Todo (Por Defecto: Caverna)")]
     public void GenerateAllDefault()
     {
@@ -88,11 +63,6 @@ public class PipelineManager : MonoBehaviour
         GenerateAll();
     }
 
-    /// <summary>
-    /// Corre el pipeline completo en orden: Perlin -> BSP -> Random Walk -> Mision -> Visualizacion.
-    /// Cada etapa deja su resultado disponible antes de que arranque la
-    /// siguiente, tal como exige el flujo del plan.
-    /// </summary>
     public void GenerateAll()
     {
         SyncDimensions();
@@ -105,11 +75,6 @@ public class PipelineManager : MonoBehaviour
         RenderMap(MapRenderStage.Full);
     }
 
-    /// <summary>
-    /// Sobrescribe los parámetros de todos los generadores con la configuración
-    /// óptima para "Caverna Excavada": salas grandes y espaciadas, túneles
-    /// naturales serpenteantes y vetas ambientales continuas.
-    /// </summary>
     public void ApplyExcavatedCaveParameters()
     {
         SetDimensions(60, 40);
@@ -154,10 +119,6 @@ public class PipelineManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Aplica los parámetros de "Caverna Excavada", genera una nueva semilla aleatoria
-    /// y ejecuta todo el pipeline en orden, renderizando el mapa completo.
-    /// </summary>
     [ContextMenu("Generar Todo: Caverna Excavada")]
     public void GenerateAllExcavatedCave()
     {
@@ -168,13 +129,6 @@ public class PipelineManager : MonoBehaviour
 
         GenerateAll();
     }
-
-    /// <summary>
-    /// Sobrescribe los parametros de todos los generadores con la configuracion
-    /// optima para "Estacion Espacial": modulos grandes y separados, corredores
-    /// rectos anchos y ductos de ventilacion angostos (Random Walk).
-    /// Las celdas vacias se rellenan con roca lunar.
-    /// </summary>
     public void ApplyLunarStationParameters()
     {
         SetDimensions(80, 60);
@@ -219,10 +173,6 @@ public class PipelineManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Aplica los parametros de "Estacion Espacial", genera una nueva semilla
-    /// aleatoria y ejecuta todo el pipeline en orden.
-    /// </summary>
     [ContextMenu("Generar Todo: Estacion Espacial")]
     public void GenerateAllLunarStation()
     {
@@ -234,11 +184,6 @@ public class PipelineManager : MonoBehaviour
         GenerateAll();
     }
 
-
-    /// <summary>
-    /// Sincroniza las dimensiones configuradas aqui hacia Perlin y BSP.
-    /// Random Walk no necesita esto: usa directamente el grid del BSP.
-    /// </summary>
     public void SyncDimensions()
     {
         if (perlinGenerator != null) perlinGenerator.SetDimensions(mapWidth, mapHeight);
@@ -314,9 +259,6 @@ public class PipelineManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Renderiza el mapa en los tilemaps con la etapa indicada.
-    /// </summary>
     public void RenderMap(MapRenderStage stage)
     {
         if (mapVisualizer != null)
@@ -325,9 +267,6 @@ public class PipelineManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Limpia los tilemaps del BSP y los marcadores de mision.
-    /// </summary>
     public void ClearAll()
     {
         if (bspGenerator != null)

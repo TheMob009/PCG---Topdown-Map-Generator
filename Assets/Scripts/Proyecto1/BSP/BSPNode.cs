@@ -2,16 +2,16 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Nodo de un árbol Binary Space Partitioning. Cada nodo representa una región
+/// Nodo de un árbol BSP. Cada nodo representa una región
 /// rectangular del grid. Si el nodo se subdivide, guarda referencia a sus dos
-/// hijos (Left/Right); si es una hoja, eventualmente contiene una sala (Room).
+/// hijos (Left/Right); si es una hoja, contiene una sala (Room).
 /// </summary>
 public class BspNode
 {
-    public RectInt Area;         // región completa de este nodo (partición)
+    public RectInt Area;// región completa de este nodo (partición)
     public BspNode Left;
     public BspNode Right;
-    public BspRoom Room;         // solo asignado si este nodo es hoja
+    public BspRoom Room;// solo asignado si este nodo es hoja
 
     /// <summary>
     /// Direccion en la que se particiono este nodo.
@@ -35,18 +35,30 @@ public class BspNode
     /// </summary>
     public bool Split(int minSize, System.Random rng)
     {
-        if (!IsLeaf) return false; // ya dividido
+        if (!IsLeaf)
+        {
+            return false; // ya dividido
+        }
 
         bool splitHorizontal = rng.NextDouble() > 0.5;
 
-        // Si el área es mucho más ancha que alta (o viceversa), forzamos el
-        // corte en la dirección que más lo necesita, para evitar salas muy alargadas.
+        // Si el área es mucho más ancha que alta (o viceversa) se fuerza
+        // el corte en una dirección, para evitar salas muy alargadas.
         float ratio = (float)Area.width / Area.height;
-        if (ratio > 1.25f) splitHorizontal = false;      // muy ancho -> corte vertical
-        else if (ratio < 0.8f) splitHorizontal = true;    // muy alto  -> corte horizontal
+        if (ratio > 1.25f)
+        {
+            splitHorizontal = false;// muy ancho -> corte vertical
+        }
+        else if (ratio < 0.8f)
+        {
+            splitHorizontal = true;// muy alto  -> corte horizontal
+        }
 
         int max = (splitHorizontal ? Area.height : Area.width) - minSize;
-        if (max <= minSize) return false; // no cabe una división válida
+        if (max <= minSize)
+        {
+            return false; // no cabe una división válida
+        }
 
         int split = rng.Next(minSize, max);
         SplitHorizontal = splitHorizontal;
@@ -72,13 +84,19 @@ public class BspNode
     /// </summary>
     public BspRoom GetAnyRoom(System.Random rng)
     {
-        if (IsLeaf) return Room;
+        if (IsLeaf)
+        {
+            return Room;
+        }
 
         BspNode first = rng.NextDouble() > 0.5 ? Left : Right;
         BspNode second = first == Left ? Right : Left;
 
         BspRoom room = first?.GetAnyRoom(rng);
-        if (room != null) return room;
+        if (room != null)
+        {
+            return room;
+        }
 
         return second?.GetAnyRoom(rng);
     }

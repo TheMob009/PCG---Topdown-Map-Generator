@@ -2,22 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-/// <summary>
-/// Enum que controla qué etapas del pipeline se visualizan en el tilemap.
-/// </summary>
+
 public enum MapRenderStage
 {
-    /// <summary>Solo salas y pasillos del BSP (sin túneles de RandomWalk).</summary>
     BSPOnly,
-    /// <summary>BSP + túneles de RandomWalk, sin diferenciación por ruido.</summary>
     WithRandomWalk,
-    /// <summary>BSP + RandomWalk + tiles diferenciados según el Perlin Noise.</summary>
     Full
 }
 
-/// <summary>
-/// Contexto temático del mapa para la asignación de tiles.
-/// </summary>
 public enum MapContext
 {
     Caverna,
@@ -61,31 +53,11 @@ public class MapContextTiles
     [Tooltip("Tile de piso para túneles de Random Walk cuando el ruido es alto.")]
     public TileBase walkFloorTileB;
 }
-
-/// <summary>
-/// Visualizador centralizado del mapa generado por el pipeline PCG.
-///
-/// Recibe los datos de los tres generadores (BSP, RandomWalk, PerlinNoise)
-/// y compone la visualización final en Tilemaps, seleccionando el tile
-/// adecuado para cada celda según:
-///   - El contexto temático activo (Caverna vs Estación Espacial).
-///   - El tipo de celda (Floor, Wall, Empty).
-///   - Si fue tallada por RandomWalk o por BSP.
-///   - El valor de ruido Perlin en esa posición (Set A vs Set B alternativo).
-/// </summary>
 public class MapVisualizer : MonoBehaviour
 {
-    // =================================================================
-    // Tilemaps destino
-    // =================================================================
-
     [Header("Tilemaps")]
     [SerializeField] private Tilemap floorTilemap;
     [SerializeField] private Tilemap wallTilemap;
-
-    // =================================================================
-    // Contextos de Tiles (4 Sets de Piso en total + Paredes + Celdas Vacías)
-    // =================================================================
 
     [Header("Contexto Activo")]
     [SerializeField] private MapContext activeContext = MapContext.Caverna;
@@ -104,31 +76,13 @@ public class MapVisualizer : MonoBehaviour
         renderEmptyAsRock = true
     };
 
-    // =================================================================
-    // Fuentes de datos
-    // =================================================================
-
     [Header("Fuentes de datos")]
     [SerializeField] private BspMapGenerator bspGenerator;
     [SerializeField] private RandomWalkGenerator randomWalkGenerator;
     [SerializeField] private PerlinMapGenerator perlinGenerator;
-
-    // =================================================================
-    // Estado interno
-    // =================================================================
-
-    /// <summary>
-    /// Snapshot del grid BSP ANTES de que RandomWalk lo modifique.
-    /// Permite renderizar "solo BSP" sin depender del estado actual del grid
-    /// (que ya fue modificado por RandomWalk).
-    /// </summary>
     private CellType[,] _bspGridSnapshot;
     private int _snapshotWidth;
     private int _snapshotHeight;
-
-    // =================================================================
-    // Métodos públicos y Getters
-    // =================================================================
 
     public MapContext ActiveContext => activeContext;
     public MapContextTiles CaveTiles => caveTiles;
@@ -136,9 +90,6 @@ public class MapVisualizer : MonoBehaviour
     public Tilemap FloorTilemap => floorTilemap;
     public Tilemap WallTilemap => wallTilemap;
 
-    /// <summary>
-    /// Cambia el contexto temático actual (Caverna o Estación Espacial).
-    /// </summary>
     public void SetContext(MapContext context)
     {
         activeContext = context;
@@ -163,11 +114,6 @@ public class MapVisualizer : MonoBehaviour
 
     public bool GetRenderEmptyAsRock() => GetActiveContextTiles()?.renderEmptyAsRock ?? false;
 
-    /// <summary>
-    /// Clona el grid actual del BSP para preservar su estado antes de que
-    /// RandomWalk lo modifique. Debe llamarse DESPUÉS de BSP.Generate()
-    /// y ANTES de RandomWalk.Generate().
-    /// </summary>
     public void SnapshotBSPGrid()
     {
         if (bspGenerator == null || bspGenerator.Result == null)
@@ -183,11 +129,6 @@ public class MapVisualizer : MonoBehaviour
 
         System.Array.Copy(result.Grid, _bspGridSnapshot, result.Grid.Length);
     }
-
-    /// <summary>
-    /// Renderiza el mapa en los tilemaps según la etapa seleccionada.
-    /// </summary>
-    /// <param name="stage">Qué etapas del pipeline incluir en la visualización.</param>
     public void Render(MapRenderStage stage)
     {
         Clear();
@@ -208,23 +149,12 @@ public class MapVisualizer : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Limpia ambos tilemaps.
-    /// </summary>
     public void Clear()
     {
         if (floorTilemap != null) floorTilemap.ClearAllTiles();
         if (wallTilemap != null) wallTilemap.ClearAllTiles();
     }
 
-    // =================================================================
-    // Renderizado interno
-    // =================================================================
-
-    /// <summary>
-    /// Renderiza solo el grid del BSP (usando el snapshot tomado antes de RandomWalk).
-    /// No aplica diferenciación por ruido; usa siempre los tiles del Set A del contexto activo.
-    /// </summary>
     private void RenderBSPOnly()
     {
         if (_bspGridSnapshot == null)
@@ -262,11 +192,6 @@ public class MapVisualizer : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Renderiza el grid completo (BSP + RandomWalk), opcionalmente con
-    /// diferenciación de tiles (Set A vs Set B) según el Perlin Noise.
-    /// </summary>
-    /// <param name="useNoise">Si true, consulta el NoiseMap para elegir Set A o B.</param>
     private void RenderWithRandomWalk(bool useNoise)
     {
         if (bspGenerator == null || bspGenerator.Result == null)
@@ -329,11 +254,6 @@ public class MapVisualizer : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Selecciona el tile de piso apropiado del contexto activo según si es túnel de RW y si
-    /// el ruido es alto (Set B) o bajo (Set A). Aplica fallback al Set A si el Set B no
-    /// tiene tiles asignados.
-    /// </summary>
     private TileBase PickFloorTile(MapContextTiles activeTiles, bool isWalkCell, bool highNoise)
     {
         if (activeTiles == null) return null;
@@ -353,10 +273,6 @@ public class MapVisualizer : MonoBehaviour
                 return activeTiles.floorTileA;
         }
     }
-
-    // =================================================================
-    // Helpers de tilemap
-    // =================================================================
 
     private void SetFloorTile(Vector3Int pos, TileBase tile)
     {

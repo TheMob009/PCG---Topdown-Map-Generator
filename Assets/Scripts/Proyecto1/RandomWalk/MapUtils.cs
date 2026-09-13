@@ -2,19 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-/// <summary>
-/// Funciones compartidas entre los distintos generadores del pipeline
-/// (BSP, Random Walk, y a futuro L-System). Evita duplicar lógica de
-/// "repintar paredes" o "volcar el grid a un Tilemap" en cada script.
-/// </summary>
 public static class MapUtils
 {
-    /// <summary>
-    /// Recalcula las paredes de todo el grid: cualquier celda vacía que
-    /// tenga al menos un vecino de tipo Floor pasa a ser Wall. Se puede
-    /// llamar de nuevo después de que otro algoritmo (Random Walk, L-System)
-    /// agregue más piso, para que las paredes se ajusten a la nueva forma.
-    /// </summary>
     public static void PaintWalls(BspMapResult result)
     {
         var wallPositions = new List<Vector2Int>();
@@ -46,11 +35,6 @@ public static class MapUtils
             result.Grid[pos.x, pos.y] = CellType.Wall;
         }
     }
-
-    /// <summary>
-    /// Vuelca el grid completo a los Tilemaps de piso/pared. Se puede llamar
-    /// tras cada etapa del pipeline para refrescar la visualización.
-    /// </summary>
     public static void DrawTilemap(BspMapResult result, Tilemap floorTilemap, Tilemap wallTilemap, TileBase floorTile, TileBase wallTile)
     {
         if (floorTilemap != null) floorTilemap.ClearAllTiles();

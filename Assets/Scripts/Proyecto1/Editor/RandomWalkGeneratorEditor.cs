@@ -2,12 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Agrega un botón "Generar Random Walk" al Inspector, para iterar sobre los
-/// parámetros (cantidad de agentes, pasos, semilla) sin entrar a Play Mode.
-///
-/// Debe estar dentro de una carpeta llamada "Editor" en el proyecto.
-/// </summary>
 [CustomEditor(typeof(RandomWalkGenerator))]
 public class RandomWalkGeneratorEditor : Editor
 {

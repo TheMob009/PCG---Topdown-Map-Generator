@@ -2,12 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Agrega un botón "Generar Perlin Noise" al Inspector, para iterar sobre
-/// frequency/seed/interpolación sin entrar a Play Mode.
-///
-/// Debe estar dentro de una carpeta llamada "Editor" en el proyecto.
-/// </summary>
 [CustomEditor(typeof(PerlinMapGenerator))]
 public class PerlinMapGeneratorEditor : Editor
 {

@@ -3,40 +3,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Conecta el Canvas UI con los generadores PCG del pipeline.
-///
-/// Responsabilidades:
-///   - Toggle del panel con ESC.
-///   - Dropdown de contexto global (Caverna / Estación Espacial) con presets.
-///   - Limpieza automática del mapa al cambiar de contexto para evitar overlap.
-///   - Dropdown para cambiar entre paneles de algoritmo.
-///   - Seed unificada con sub-seeds derivadas por algoritmo.
-///   - Botones de generación individual y pipeline completo con renderizado en MapVisualizer.
-///   - Sliders con labels dinámicos.
-///   - Sincronización de dimensiones BSP → Perlin (read-only).
-///   - Toggle de tipo de corredor BSP.
-///   - Campos de producción terminal y task productions del Mission Grammar.
-/// </summary>
 public class PCGUIManager : MonoBehaviour
 {
-    // =================================================================
-    // Referencias al pipeline
-    // =================================================================
 
     [Header("Pipeline")]
     [SerializeField] private PipelineManager pipelineManager;
 
-    // =================================================================
-    // Panel principal (se oculta/muestra con ESC)
-    // =================================================================
-
     [Header("Panel principal")]
     [SerializeField] private GameObject panel;
-
-    // =================================================================
-    // Controles globales (siempre visibles dentro del panel)
-    // =================================================================
 
     [Header("Controles globales")]
     [SerializeField] private TMP_Dropdown cmbContexto;
@@ -44,19 +18,11 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private TMP_InputField fldSeed;
     [SerializeField] private Button btnGenerarAll;
 
-    // =================================================================
-    // Sub-paneles de cada algoritmo
-    // =================================================================
-
     [Header("Sub-paneles")]
     [SerializeField] private GameObject panelBSP;
     [SerializeField] private GameObject panelRandomWalk;
     [SerializeField] private GameObject panelPerlinNoise;
     [SerializeField] private GameObject panelMissionGrammar;
-
-    // =================================================================
-    // Controles BSP
-    // =================================================================
 
     [Header("BSP")]
     [SerializeField] private TMP_InputField fldAncho;
@@ -69,19 +35,11 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private Toggle tglCorridors;
     [SerializeField] private Button btnGenerarBSP;
 
-    // =================================================================
-    // Controles Random Walk
-    // =================================================================
-
     [Header("Random Walk")]
     [SerializeField] private TMP_InputField fldCount;
     [SerializeField] private TMP_InputField fldSteps;
     [SerializeField] private TMP_InputField fldWalk;
     [SerializeField] private Button btnGenerarRandomWalk;
-
-    // =================================================================
-    // Controles Perlin Noise
-    // =================================================================
 
     [Header("Perlin Noise")]
     [SerializeField] private TMP_InputField fldAnchoPerlin;
@@ -90,10 +48,6 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private TMP_Text lblFrecuency;
     [SerializeField] private TMP_Dropdown dropdownInterpolation;
     [SerializeField] private Button btnGenerarPerlin;
-
-    // =================================================================
-    // Controles Mission Grammar
-    // =================================================================
 
     [Header("Mission Grammar")]
     [SerializeField] private TMP_InputField fdlStartSymbol;
@@ -106,15 +60,7 @@ public class PCGUIManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown dropdownMissionContext;
     [SerializeField] private Button btnGenerarMission;
 
-    // =================================================================
-    // Estado interno
-    // =================================================================
-
     private int _currentSeed;
-
-    // =================================================================
-    // INICIALIZACIÓN
-    // =================================================================
 
     private void Start()
     {
@@ -148,19 +94,11 @@ public class PCGUIManager : MonoBehaviour
         OnAlgorithmChanged(cmbAlgoritmo != null ? cmbAlgoritmo.value : 0);
     }
 
-    // =================================================================
-    // UPDATE — Toggle con ESC
-    // =================================================================
-
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape) && panel != null)
             panel.SetActive(!panel.activeSelf);
     }
-
-    // =================================================================
-    // INICIALIZACIÓN DE LA UI CON VALORES ACTUALES DE LOS GENERADORES
-    // =================================================================
 
     private void PopulateUIFromGenerators()
     {
@@ -231,15 +169,6 @@ public class PCGUIManager : MonoBehaviour
         }
     }
 
-    // =================================================================
-    // CAMBIO DE CONTEXTO GLOBAL — limpia mapa y aplica preset
-    // =================================================================
-
-    /// <summary>
-    /// Aplica el preset del contexto seleccionado, sincroniza MapVisualizer,
-    /// actualiza los campos de la UI y limpia el mapa anterior para evitar overlap.
-    /// Index: 0 = Caverna, 1 = Estación Espacial.
-    /// </summary>
     private void OnContextChanged(int index)
     {
         // 1. Limpiar el mapa actual para evitar overlap visual
@@ -268,14 +197,6 @@ public class PCGUIManager : MonoBehaviour
         PopulateUIFromGenerators();
     }
 
-    // =================================================================
-    // CAMBIO DE PANEL DE ALGORITMO
-    // =================================================================
-
-    /// <summary>
-    /// Activa el sub-panel del algoritmo seleccionado y desactiva los demás.
-    /// Index: 0 = BSP, 1 = Random Walk, 2 = Perlin Noise, 3 = Mission Grammar.
-    /// </summary>
     private void OnAlgorithmChanged(int index)
     {
         if (panelBSP != null)            panelBSP.SetActive(index == 0);
@@ -283,10 +204,6 @@ public class PCGUIManager : MonoBehaviour
         if (panelPerlinNoise != null)    panelPerlinNoise.SetActive(index == 2);
         if (panelMissionGrammar != null) panelMissionGrammar.SetActive(index == 3);
     }
-
-    // =================================================================
-    // LECTURA DE SEED
-    // =================================================================
 
     private int ReadSeed()
     {
@@ -301,10 +218,6 @@ public class PCGUIManager : MonoBehaviour
         }
         return _currentSeed;
     }
-
-    // =================================================================
-    // APLICAR VALORES DE LA UI A LOS GENERADORES
-    // =================================================================
 
     private void ApplyContextValues()
     {
@@ -408,10 +321,6 @@ public class PCGUIManager : MonoBehaviour
             mg.SetMissionContext((MissionContext)dropdownMissionContext.value);
     }
 
-    // =================================================================
-    // CALLBACKS DE BOTONES DE GENERACIÓN
-    // =================================================================
-
     private void OnGenerateAll()
     {
         int seed = ReadSeed();
@@ -483,10 +392,6 @@ public class PCGUIManager : MonoBehaviour
         pipelineManager.GenerateMissionGrammarOnly();
     }
 
-    // =================================================================
-    // CALLBACKS DE SLIDERS
-    // =================================================================
-
     private void UpdateFrequencyLabel(float value)
     {
         if (lblFrecuency != null)
@@ -498,10 +403,6 @@ public class PCGUIManager : MonoBehaviour
         if (lblExpansionStep != null)
             lblExpansionStep.text = "Expansion Steps: " + value;
     }
-
-    // =================================================================
-    // UTILIDADES
-    // =================================================================
 
     private void SyncPerlinDimensionsUI()
     {

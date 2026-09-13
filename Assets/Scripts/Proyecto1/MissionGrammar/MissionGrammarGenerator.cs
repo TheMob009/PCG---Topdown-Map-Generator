@@ -16,10 +16,6 @@ using UnityEngine;
 /// </summary>
 public class MissionGrammarGenerator : MonoBehaviour
 {
-    // -----------------------------------------------------------------
-    // Configuración de la gramática
-    // -----------------------------------------------------------------
-
     [Header("Gramatica")]
 
     [Tooltip("Simbolo inicial de la gramatica (no-terminal).")]
@@ -32,7 +28,8 @@ public class MissionGrammarGenerator : MonoBehaviour
     [SerializeField] private string taskSymbol = "T";
 
     [Tooltip("Producciones posibles para el taskSymbol. Se eligen aleatoriamente en cada expansion.")]
-    [SerializeField] private List<string> taskProductions = new List<string>()
+    [SerializeField]
+    private List<string> taskProductions = new List<string>()
     {
         "RT",
         "CT",
@@ -47,58 +44,27 @@ public class MissionGrammarGenerator : MonoBehaviour
     [Range(1, 10)]
     [SerializeField] private int expansionSteps = 4;
 
-    // -----------------------------------------------------------------
-    // Referencias
-    // -----------------------------------------------------------------
-
     [Header("Referencias")]
-
     [Tooltip("BspMapGenerator del que se toman las salas y el arbol para la adyacencia.")]
     [SerializeField] private BspMapGenerator bspGenerator;
-
-    // -----------------------------------------------------------------
-    // Semilla
-    // -----------------------------------------------------------------
 
     [Header("Semilla")]
     [SerializeField] private bool useRandomSeed = true;
     [SerializeField] private int seed = 42;
 
-    // -----------------------------------------------------------------
-    // Contexto narrativo
-    // -----------------------------------------------------------------
-
     [Header("Contexto narrativo")]
     [Tooltip("Cambia las descripciones textuales de la mision (no la mecanica).")]
     [SerializeField] private MissionContext missionContext = MissionContext.Mina;
 
-    // -----------------------------------------------------------------
-    // Debug
-    // -----------------------------------------------------------------
-
     [Header("Debug")]
     [SerializeField] private bool showGizmo = true;
 
-    // -----------------------------------------------------------------
-    // Estado público
-    // -----------------------------------------------------------------
-
-    /// <summary>Cadena final generada por la gramática.</summary>
     public string FinalChain { get; private set; }
 
-    /// <summary>Lista de asignaciones sala-símbolo en orden de recorrido.</summary>
     public List<MissionRoomAssignment> Assignments { get; private set; }
 
-    /// <summary>Derivación completa (historial de expansiones).</summary>
     public List<string> Derivation { get; private set; }
 
-    // -----------------------------------------------------------------
-    // Setters / Getters para la UI
-    // -----------------------------------------------------------------
-
-    /// <summary>
-    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
-    /// </summary>
     public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
     public void SetStartSymbol(string value) { startSymbol = value; }
     public void SetTaskSymbol(string value) { taskSymbol = value; }
@@ -117,11 +83,6 @@ public class MissionGrammarGenerator : MonoBehaviour
     public MissionContext GetMissionContext() => missionContext;
     public string GetTerminalProduction() => terminalProduction;
     public System.Collections.Generic.List<string> GetTaskProductions() => taskProductions;
-
-
-    // =====================================================================
-    // GENERACIÓN
-    // =====================================================================
 
     /// <summary>
     /// Ejecuta el proceso completo: gramática → asignación → impresión.
@@ -170,10 +131,6 @@ public class MissionGrammarGenerator : MonoBehaviour
         PrintMission();
     }
 
-    // -----------------------------------------------------------------
-    // 1. Expansión secuencial de la gramática
-    // -----------------------------------------------------------------
-
     private string ExpandGrammar(System.Random rng)
     {
         Derivation = new List<string>();
@@ -206,10 +163,6 @@ public class MissionGrammarGenerator : MonoBehaviour
         return current;
     }
 
-    // -----------------------------------------------------------------
-    // 2. Parseo de la cadena final
-    // -----------------------------------------------------------------
-
     private List<MissionSymbolType> ParseChain(string chain)
     {
         var result = new List<MissionSymbolType>();
@@ -221,10 +174,6 @@ public class MissionGrammarGenerator : MonoBehaviour
         }
         return result;
     }
-
-    // -----------------------------------------------------------------
-    // 3. Grafo de adyacencia desde el árbol BSP
-    // -----------------------------------------------------------------
 
     /// <summary>
     /// Recorre el árbol BSP y conecta las salas que el BSP unió con pasillos
@@ -272,11 +221,6 @@ public class MissionGrammarGenerator : MonoBehaviour
 
         return leftRoom ?? rightRoom;
     }
-
-    // -----------------------------------------------------------------
-    // 4. Asignación de símbolos a salas por BFS
-    // -----------------------------------------------------------------
-
     /// <summary>
     /// Hace un BFS desde la primera sala (sala de inicio del jugador, S) y
     /// asigna cada símbolo de la misión a una sala en el orden del recorrido.
@@ -322,7 +266,10 @@ public class MissionGrammarGenerator : MonoBehaviour
                         visitedIds.Add(neighborId);
                         BspRoom neighborRoom = rooms.Find(r => r.Id == neighborId);
                         if (neighborRoom != null)
+                        {
                             queue.Enqueue(neighborRoom);
+                        }
+
                     }
                 }
             }
@@ -361,10 +308,6 @@ public class MissionGrammarGenerator : MonoBehaviour
 
         return assignments;
     }
-
-    // -----------------------------------------------------------------
-    // 5. Impresión en consola
-    // -----------------------------------------------------------------
 
     private void PrintMission()
     {
@@ -425,10 +368,6 @@ public class MissionGrammarGenerator : MonoBehaviour
         Debug.Log(sb.ToString(), this);
     }
 
-    // -----------------------------------------------------------------
-    // Validación
-    // -----------------------------------------------------------------
-
     private bool ValidateGrammar()
     {
         if (string.IsNullOrEmpty(startSymbol))
@@ -469,10 +408,6 @@ public class MissionGrammarGenerator : MonoBehaviour
 
         return true;
     }
-
-    // -----------------------------------------------------------------
-    // Gizmos
-    // -----------------------------------------------------------------
 
     private void OnDrawGizmos()
     {

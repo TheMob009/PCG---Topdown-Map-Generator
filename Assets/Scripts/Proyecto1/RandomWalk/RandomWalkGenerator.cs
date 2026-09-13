@@ -1,17 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Segunda etapa del pipeline: parte de un mapa ya generado por BSP y agrega
-/// caminos secundarios más irregulares mediante agentes de Random Walk.
-///
-/// En la mina se interpretan como galerías secundarias o túneles naturales;
-/// en la colonia, como corredores o ductos de mantenimiento. A diferencia de
-/// los pasillos del BSP (rectos, en L), estos agentes caminan al azar paso a
-/// paso y pueden enroscarse libremente, dando un resultado más orgánico.
-///
-/// Requiere que un BspMapGenerator ya haya corrido antes (Result != null).
-/// </summary>
 public class RandomWalkGenerator : MonoBehaviour
 {
     [Header("Fuente del mapa (debe generarse antes)")]
@@ -54,23 +43,11 @@ public class RandomWalkGenerator : MonoBehaviour
         Vector2Int.right,
     };
 
-    /// <summary>
-    /// Referencia al mismo resultado que generó el BSP. Se modifica in-place:
-    /// Random Walk no crea un grid nuevo, sino que agrega piso sobre el existente.
-    /// </summary>
+   
     public BspMapResult Result => bspGenerator != null ? bspGenerator.Result : null;
-
-    /// <summary>
-    /// Celdas que este Random Walk agregó como piso nuevo (no las que ya
-    /// venían del BSP). Expuesto para que MapVisualizer pueda diferenciar
-    /// visualmente los túneles del Random Walk de las salas del BSP.
-    /// </summary>
     public HashSet<Vector2Int> CarvedByWalk => _carvedByWalk;
     private readonly HashSet<Vector2Int> _carvedByWalk = new HashSet<Vector2Int>();
 
-    /// <summary>
-    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
-    /// </summary>
     public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
     public void SetAgentCount(int value) { agentCount = value; }
     public void SetStepsPerAgent(int value) { stepsPerAgent = value; }
@@ -78,7 +55,6 @@ public class RandomWalkGenerator : MonoBehaviour
     public void SetDirectionPersistence(float value) { directionPersistence = Mathf.Clamp01(value); }
     public void SetSpawnFromRoomEdge(bool value) { spawnFromRoomEdge = value; }
 
-    // Getters para inicializar la UI con los valores actuales
     public int Seed => seed;
     public int GetAgentCount() => agentCount;
     public int GetStepsPerAgent() => stepsPerAgent;
@@ -86,9 +62,6 @@ public class RandomWalkGenerator : MonoBehaviour
     public float GetDirectionPersistence() => directionPersistence;
     public bool GetSpawnFromRoomEdge() => spawnFromRoomEdge;
 
-    /// <summary>
-    /// Ejecuta el Random Walk sobre el grid ya generado por el BSP.
-    /// </summary>
     public void Generate()
     {
         _carvedByWalk.Clear();
@@ -124,11 +97,6 @@ public class RandomWalkGenerator : MonoBehaviour
         // Recalcula las paredes: los nuevos túneles también necesitan su borde.
         MapUtils.PaintWalls(result);
     }
-
-    /// <summary>
-    /// Hace caminar a un único agente: parte del centro de una sala aleatoria
-    /// y da stepsPerAgent pasos en direcciones aleatorias, tallando piso.
-    /// </summary>
     private void RunAgent(BspMapResult result)
     {
         var startRoom = result.Rooms[_rng.Next(result.Rooms.Count)];
@@ -174,11 +142,6 @@ public class RandomWalkGenerator : MonoBehaviour
         CarveAt(result, pos);
     }
 
-    /// <summary>
-    /// Elige un punto de partida en una esquina de la sala (con un pequeño
-    /// margen hacia adentro para seguir siendo piso válido), en vez del
-    /// centro. Simula que el túnel/ducto nace pegado al borde del módulo.
-    /// </summary>
     private Vector2Int GetRoomEdgeSpawnPoint(BspRoom room)
     {
         var b = room.Bounds;
@@ -191,21 +154,16 @@ public class RandomWalkGenerator : MonoBehaviour
 
         switch (corner)
         {
-            case 0: x = b.x + insetX; y = b.y + insetY; break;                               // inferior-izquierda
-            case 1: x = b.x + b.width - 1 - insetX; y = b.y + insetY; break;                  // inferior-derecha
-            case 2: x = b.x + insetX; y = b.y + b.height - 1 - insetY; break;                 // superior-izquierda
-            default: x = b.x + b.width - 1 - insetX; y = b.y + b.height - 1 - insetY; break;  // superior-derecha
+            case 0: x = b.x + insetX; y = b.y + insetY; break;// inferior-izquierda
+            case 1: x = b.x + b.width - 1 - insetX; y = b.y + insetY; break;// inferior-derecha
+            case 2: x = b.x + insetX; y = b.y + b.height - 1 - insetY; break;// superior-izquierda
+            default: x = b.x + b.width - 1 - insetX; y = b.y + b.height - 1 - insetY; break;// superior-derecha
         }
 
         return new Vector2Int(
             Mathf.Clamp(x, b.x, b.x + b.width - 1),
             Mathf.Clamp(y, b.y, b.y + b.height - 1));
     }
-
-    /// <summary>
-    /// Talla piso en la posición dada, expandiendo según walkWidth (igual
-    /// criterio que el ancho de pasillo usado en el BSP).
-    /// </summary>
     private void CarveAt(BspMapResult result, Vector2Int center)
     {
         int half = walkWidth / 2;
@@ -225,10 +183,6 @@ public class RandomWalkGenerator : MonoBehaviour
             }
         }
     }
-
-    // ---------------------------------------------------------------------
-    // Debug visual en el editor
-    // ---------------------------------------------------------------------
     private void OnDrawGizmos()
     {
         if (Result == null) return;

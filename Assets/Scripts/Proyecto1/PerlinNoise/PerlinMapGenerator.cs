@@ -1,23 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Primera etapa conceptual del pipeline (aunque se ejecute como script
-/// independiente): genera un mapa de ruido Perlin del mismo tamaño que el
-/// grid del BSP (width x height), usado como capa de datos ambiental.
-///
-/// Los valores NO representan altura física. Indican características del
-/// terreno: en la mina, zonas con valores altos pueden tener más presencia
-/// de minerales; en la colonia, más presencia de cristales o condiciones
-/// ambientales particulares. El BSP y el L-System consultan este mapa para
-/// decidir dónde ubicar contenido.
-///
-/// Reutiliza el algoritmo de Perlin/Gradient Noise 2D implementado en el
-/// laboratorio (PerlinNoiseGenerator + HeightmapGenerator), sin modificarlos.
-/// Esos scripts generan mapas cuadrados (resolution x resolution) pensados
-/// para un Terrain; aquí se llama directamente a GetNoiseValue() celda por
-/// celda para poder soportar un grid rectangular (width x height) igual al
-/// del BSP.
-/// </summary>
 public class PerlinMapGenerator : MonoBehaviour
 {
     [Header("Dimensiones (deben coincidir con el grid del BSP)")]
@@ -47,38 +29,23 @@ public class PerlinMapGenerator : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float threshold = 0.5f;
 
-    /// <summary>
-    /// Mapa de ruido normalizado a [0,1], mismo sistema de coordenadas
-    /// [x, y] que BspMapResult.Grid (a diferencia del heightmap original
-    /// del laboratorio, que usa [y, x] por convención de Terrain).
-    /// </summary>
     public float[,] NoiseMap { get; private set; }
 
-    /// <summary>
-    /// Valor mínimo encontrado en el NoiseMap tras la última generación.
-    /// </summary>
     public float NoiseMin { get; private set; }
 
-    /// <summary>
-    /// Valor máximo encontrado en el NoiseMap tras la última generación.
-    /// </summary>
+
     public float NoiseMax { get; private set; }
 
     public int Width => width;
     public int Height => height;
 
-    /// <summary>
-    /// Permite que el PipelineManager sincronice el tamaño con el del BSP.
-    /// </summary>
+ 
     public void SetDimensions(int newWidth, int newHeight)
     {
         width = newWidth;
         height = newHeight;
     }
 
-    /// <summary>
-    /// Fija la semilla manualmente y desactiva la generacion aleatoria.
-    /// </summary>
     public void SetSeed(int newSeed) { useRandomSeed = false; seed = newSeed; }
     public void SetFrequency(float value) { frequency = value; }
     public void SetInterpolationMode(HeightmapGenerator.InterpolationMode mode) { interpolationMode = mode; }
@@ -93,11 +60,6 @@ public class PerlinMapGenerator : MonoBehaviour
     public void SetThreshold(float value) { threshold = Mathf.Clamp01(value); }
     public float GetThreshold() => threshold;
 
-    /// <summary>
-    /// Genera el mapa de ruido. Independiente del BSP: solo depende del
-    /// tamaño configurado, por lo que puede ejecutarse antes que el BSP
-    /// (como indica el flujo del plan: SEED -> PERLIN -> BSP -> ...).
-    /// </summary>
     public float[,] Generate()
     {
         int actualSeed = useRandomSeed ? System.Environment.TickCount : seed;
@@ -151,10 +113,6 @@ public class PerlinMapGenerator : MonoBehaviour
         return NoiseMap;
     }
 
-    /// <summary>
-    /// Valor de ruido en una celda del grid. Devuelve 0 si está fuera de rango
-    /// o si el mapa todavía no se ha generado.
-    /// </summary>
     public float GetValueAt(int x, int y)
     {
         if (NoiseMap == null) return 0f;
@@ -162,11 +120,6 @@ public class PerlinMapGenerator : MonoBehaviour
         return NoiseMap[x, y];
     }
 
-    /// <summary>
-    /// Valor de ruido normalizado al rango real [NoiseMin, NoiseMax] → [0,1].
-    /// Coincide exactamente con la escala de grises del Gizmo.
-    /// Devuelve 0 si el mapa no se ha generado o la celda está fuera de rango.
-    /// </summary>
     public float GetNormalizedValueAt(int x, int y)
     {
         if (NoiseMap == null) return 0f;
@@ -176,11 +129,6 @@ public class PerlinMapGenerator : MonoBehaviour
         return (NoiseMap[x, y] - NoiseMin) / range;
     }
 
-    /// <summary>
-    /// Promedio del ruido dentro de los límites de una sala del BSP. Pensado
-    /// para que el L-System pueda elegir salas con mayor concentración de
-    /// "mineral" o "cristal" como puntos de origen de las vetas.
-    /// </summary>
     public float GetAverageValueInRoom(BspRoom room)
     {
         if (NoiseMap == null) return 0f;
@@ -201,16 +149,6 @@ public class PerlinMapGenerator : MonoBehaviour
         return count > 0 ? sum / count : 0f;
     }
 
-    // ---------------------------------------------------------------------
-    // Debug visual en el editor: pinta el mapa de ruido como escala de grises
-    // ---------------------------------------------------------------------
-    //
-    // Nota: Gizmos.DrawCube en 3D se ve afectado por el ángulo de cámara y
-    // el sombreado de la Scene view, lo que puede hacer que valores de gris
-    // intermedios (típicos de Perlin, que rara vez toca 0 o 1) se vean casi
-    // uniformes. Por eso aquí se remapea el contraste antes de pintar, y se
-    // recomienda mirar el mapa desde arriba (vista Top) para evitar
-    // distorsión por perspectiva.
     private void OnDrawGizmos()
     {
         if (NoiseMap == null || !showGizmo) return;

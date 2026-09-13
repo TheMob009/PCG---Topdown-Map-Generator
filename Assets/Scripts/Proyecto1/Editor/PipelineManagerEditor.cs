@@ -2,13 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Agrega botones al Inspector del PipelineManager para generar el mapa
-/// completo en el orden correcto (Perlin -> BSP -> Random Walk), o cada
-/// etapa por separado, sin entrar a Play Mode.
-///
-/// Debe estar dentro de una carpeta llamada "Editor" en el proyecto.
-/// </summary>
 [CustomEditor(typeof(PipelineManager))]
 public class PipelineManagerEditor : Editor
 {
@@ -115,18 +108,25 @@ public class PipelineManagerEditor : Editor
             MessageType.Info);
     }
 
-    /// <summary>
-    /// Envuelve cualquier acción del pipeline con Undo y marcado de escena
-    /// como sucia, para que los cambios generados en editor no se pierdan
-    /// silenciosamente y puedan deshacerse con Ctrl+Z.
-    /// </summary>
     private void RunAction(PipelineManager pipeline, string undoLabel, System.Action action)
     {
         var targets = new System.Collections.Generic.List<UnityEngine.Object> { pipeline };
-        if (pipeline.PerlinGenerator != null) targets.Add(pipeline.PerlinGenerator);
-        if (pipeline.BspGenerator != null) targets.Add(pipeline.BspGenerator);
-        if (pipeline.RWGenerator != null) targets.Add(pipeline.RWGenerator);
-        if (pipeline.MGGenerator != null) targets.Add(pipeline.MGGenerator);
+        if (pipeline.PerlinGenerator != null)
+        {
+            targets.Add(pipeline.PerlinGenerator);
+        }
+        if (pipeline.BspGenerator != null)
+        {
+            targets.Add(pipeline.BspGenerator);
+        }
+        if (pipeline.RWGenerator != null)
+        {
+            targets.Add(pipeline.RWGenerator);
+        }
+        if (pipeline.MGGenerator != null)
+        {
+            targets.Add(pipeline.MGGenerator);
+        }
 
         Undo.RegisterCompleteObjectUndo(targets.ToArray(), undoLabel);
 
@@ -134,7 +134,10 @@ public class PipelineManagerEditor : Editor
 
         foreach (var t in targets)
         {
-            if (t != null) EditorUtility.SetDirty(t);
+            if (t != null)
+            {
+                EditorUtility.SetDirty(t);
+            }
         }
 
         if (!Application.isPlaying)
