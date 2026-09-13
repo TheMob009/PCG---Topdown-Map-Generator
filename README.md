@@ -32,6 +32,17 @@ The system supports two thematic contexts out of the box:
 | **Cave** | Organic cavern with erratic tunnels | Mining mission |
 | **Space Station** | Modular rooms connected by straight ducts | Colony mission |
 
+
+Developers: Noriyuki Kato & Matias Ortega
+Platform: Unity 2022.3.62f3
+
+Controls:
+The UI have a multiple input fields to set a new value for the options.
+Slider to adjust in a range between 0 to 1
+Checkbox to turn On/Off some features.
+And to close or open the UI press ESC key.
+
+
 ---
 
 ## Features
